@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, BarChart3, Trophy, MapPin, Navigation, Download, Target, Search, Filter } from "lucide-react";
+import { Play, BarChart3, Trophy, MapPin, Navigation, Download, Target, Search, Filter, Clock, Calendar, Trash2 } from "lucide-react";
 import { ScoreCard } from "@/components/golf/ScoreCard";
 import { GPS } from "@/components/golf/GPS";
 import { ShotTrackingMap } from "@/components/golf/ShotTrackingMap";
@@ -23,7 +23,22 @@ const Index = () => {
   const [activeView, setActiveView] = useState<'home' | 'courses' | 'play'>('home');
   const [searchQuery, setSearchQuery] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
+  const [pastRounds, setPastRounds] = useState<Round[]>([]);
   const { toast } = useToast();
+
+  // Load past rounds from localStorage
+  useEffect(() => {
+    const savedRounds = localStorage.getItem('golfRounds');
+    if (savedRounds) {
+      setPastRounds(JSON.parse(savedRounds));
+    }
+  }, []);
+
+  // Save rounds to localStorage
+  const saveRounds = (rounds: Round[]) => {
+    localStorage.setItem('golfRounds', JSON.stringify(rounds));
+    setPastRounds(rounds);
+  };
 
   // Filter courses based on search and location
   const filteredCourses = courses.filter(course => {
@@ -145,14 +160,50 @@ const Index = () => {
   };
 
   const endRound = () => {
+    if (currentRound) {
+      const updatedRounds = [...pastRounds, currentRound];
+      saveRounds(updatedRounds);
+    }
+    
     setCurrentRound(null);
     setShotTrackingRound(null);
     setActiveView('home');
     toast({
-      title: "Round Complete! 🎉",
-      description: "Great round! Your scores have been saved."
+      title: "Round Completed! 🏌️",
+      description: "Great game! Your round has been saved."
     });
   };
+
+  const deleteRound = (roundId: string) => {
+    const updatedRounds = pastRounds.filter(round => round.id !== roundId);
+    saveRounds(updatedRounds);
+    toast({
+      title: "Round Deleted",
+      description: "Round has been removed from your history."
+    });
+  };
+
+  const loadPastRound = (round: Round) => {
+    setCurrentRound(round);
+    const course = courses.find(c => c.name === round.courseId) || courses[0];
+    setSelectedCourse(course);
+    setActiveView('play');
+    
+    const newShotRound: ShotTrackingRound = {
+      id: Date.now().toString(),
+      courseId: round.courseId,
+      courseName: round.courseName,
+      date: new Date().toISOString(),
+      shots: []
+    };
+    setShotTrackingRound(newShotRound);
+    
+    toast({
+      title: "Round Loaded",
+      description: `Viewing round from ${new Date(round.date).toLocaleDateString()}`
+    });
+  };
+
 
   if (activeView === 'home') {
     return (
@@ -339,6 +390,80 @@ const Index = () => {
               </Card>
             </div>
           </div>
+
+          {/* Past Rounds Section */}
+          {pastRounds.length > 0 && (
+            <div className="max-w-4xl mx-auto mt-16">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-4">Your Golf History</h2>
+                <p className="text-muted-foreground">Review and analyze your past rounds</p>
+              </div>
+              
+              <Card className="p-8 bg-white/80 backdrop-blur-sm border-0">
+                <div className="grid gap-4">
+                  {pastRounds.slice(-5).reverse().map((round) => {
+                    const totalScore = round.scores.reduce((sum, score) => sum + (score.score || 0), 0);
+                    const totalPar = round.scores.reduce((sum, score) => sum + score.par, 0);
+                    const scoreToPar = totalScore - totalPar;
+                    const completedHoles = round.scores.filter(score => score.score && score.score > 0).length;
+                    
+                    return (
+                      <div key={round.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl border border-primary/10 hover:border-primary/20 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                            <Calendar className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-lg">{round.courseName}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(round.date).toLocaleDateString()} • {completedHoles}/{round.scores.length} holes
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-primary">{totalScore > 0 ? totalScore : '-'}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {totalScore > 0 ? (scoreToPar > 0 ? `+${scoreToPar}` : scoreToPar === 0 ? 'E' : scoreToPar) : 'In Progress'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => loadPastRound(round)}
+                              className="hover:bg-primary/10"
+                            >
+                              <Clock className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => deleteRound(round.id)}
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {pastRounds.length > 5 && (
+                  <div className="text-center mt-6">
+                    <Badge variant="outline" className="text-sm">
+                      Showing 5 most recent rounds • {pastRounds.length} total rounds played
+                    </Badge>
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
         </div>
       </div>
     );
