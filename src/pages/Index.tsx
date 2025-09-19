@@ -10,9 +10,13 @@ import { ScoreCard } from "@/components/golf/ScoreCard";
 import { GPS } from "@/components/golf/GPS";
 import { ShotTrackingMap } from "@/components/golf/ShotTrackingMap";
 import { CourseDownloader } from "@/components/golf/CourseDownloader";
+import { WeatherWidget } from "@/components/golf/WeatherWidget";
+import { PhotoAttachment } from "@/components/golf/PhotoAttachment";
+import { OfflineIndicator } from "@/components/golf/OfflineIndicator";
 import { enhancedNYCourses } from "@/data/enhanced-ny-courses";
 import { Course, ScoreEntry, Round } from "@/types/golf";
 import { Shot, ShotTrackingRound } from "@/types/shot";
+import { OfflineService } from "@/services/offline";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -24,14 +28,19 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [locationFilter, setLocationFilter] = useState('all');
   const [pastRounds, setPastRounds] = useState<Round[]>([]);
+  const [roundPhotos, setRoundPhotos] = useState<any[]>([]);
   const { toast } = useToast();
 
-  // Load past rounds from localStorage
+  // Load past rounds from localStorage and initialize offline service
   useEffect(() => {
     const savedRounds = localStorage.getItem('golfRounds');
     if (savedRounds) {
       setPastRounds(JSON.parse(savedRounds));
     }
+    
+    // Initialize offline service
+    OfflineService.initialize();
+    OfflineService.saveCourses(enhancedNYCourses); // Cache courses offline
   }, []);
 
   // Save rounds to localStorage
@@ -640,10 +649,11 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scorecard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
             <TabsTrigger value="gps">GPS</TabsTrigger>
             <TabsTrigger value="shots">Shot Tracking</TabsTrigger>
+            <TabsTrigger value="extras">Extras</TabsTrigger>
           </TabsList>
 
           <TabsContent value="scorecard" className="space-y-4">
@@ -690,7 +700,15 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="gps">
-            <GPS currentHole={getCurrentHoleData()} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <GPS currentHole={getCurrentHoleData()} />
+              <WeatherWidget 
+                courseLocation={selectedCourse ? {
+                  lat: selectedCourse.holes[0]?.teeCoords?.lat || 0,
+                  lng: selectedCourse.holes[0]?.teeCoords?.lng || 0
+                } : undefined} 
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="shots">
@@ -700,6 +718,17 @@ const Index = () => {
               onShotAdd={addShot}
               onShotDelete={deleteShot}
             />
+          </TabsContent>
+
+          <TabsContent value="extras" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <OfflineIndicator />
+              <PhotoAttachment 
+                photos={roundPhotos}
+                onPhotosChange={setRoundPhotos}
+                holeNumber={currentHole}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
