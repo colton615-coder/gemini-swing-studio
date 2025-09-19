@@ -222,6 +222,19 @@ const Index = () => {
     });
   };
 
+  const editShot = (shotId: string, updates: Partial<Shot>) => {
+    if (!shotTrackingRound) return;
+    
+    const updatedShots = shotTrackingRound.shots.map(shot =>
+      shot.id === shotId ? { ...shot, ...updates } : shot
+    );
+    
+    setShotTrackingRound({
+      ...shotTrackingRound,
+      shots: updatedShots
+    });
+  };
+
   const getCurrentHoleData = () => {
     return selectedCourse.holes.find(hole => hole.holeNumber === currentHole);
   };
@@ -788,6 +801,7 @@ const Index = () => {
               onShotAdd={addShot}
               onShotUpdate={updateShot}
               onShotDelete={deleteShot}
+              onShotEdit={editShot}
             />
           </TabsContent>
 

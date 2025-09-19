@@ -4,7 +4,9 @@ import 'leaflet/dist/leaflet.css';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Target, Minus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Target, Minus, Edit2, Trash2 } from "lucide-react";
 import { Hole } from "@/types/golf";
 import { Shot } from "@/types/shot";
 import { calculateDistance } from "@/utils/gps";
@@ -24,6 +26,7 @@ interface BlueGolfMapProps {
   onShotAdd: (shot: Omit<Shot, 'id' | 'timestamp'>) => void;
   onShotUpdate: (shotId: string, coordinates: { lat: number; lng: number }) => void;
   onShotDelete: (shotId: string) => void;
+  onShotEdit?: (shotId: string, updates: Partial<Shot>) => void;
 }
 
 export function BlueGolfMap({ 
@@ -31,14 +34,20 @@ export function BlueGolfMap({
   shots, 
   onShotAdd, 
   onShotUpdate, 
-  onShotDelete 
+  onShotDelete,
+  onShotEdit 
 }: BlueGolfMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markersLayer = useRef<L.LayerGroup | null>(null);
   const trajectoryLayer = useRef<L.LayerGroup | null>(null);
   const [selectedShot, setSelectedShot] = useState<string | null>(null);
+  const [editingShot, setEditingShot] = useState<Shot | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const clubs = ['Driver', '3-Wood', '5-Wood', '3-Iron', '4-Iron', '5-Iron', '6-Iron', '7-Iron', '8-Iron', '9-Iron', 'PW', 'SW', 'Putter'];
+  const lies = ['tee', 'fairway', 'rough', 'sand', 'green'] as const;
 
   const createTeeIcon = () => {
     return L.divIcon({
@@ -204,7 +213,8 @@ export function BlueGolfMap({
       });
 
       // Handle marker selection
-      shotMarker.on('click', () => {
+      shotMarker.on('click', (e) => {
+        e.originalEvent.stopPropagation();
         setSelectedShot(selectedShot === shot.id ? null : shot.id);
       });
     });
@@ -306,6 +316,36 @@ export function BlueGolfMap({
   }, [shots, selectedShot]);
 
   const currentHoleShots = shots.filter(s => currentHole && s.holeNumber === currentHole.holeNumber);
+  const selectedShotData = selectedShot ? currentHoleShots.find(s => s.id === selectedShot) : null;
+
+  const handleEditShot = (shot: Shot) => {
+    setEditingShot(shot);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingShot && onShotEdit) {
+      onShotEdit(editingShot.id, {
+        club: editingShot.club,
+        lie: editingShot.lie
+      });
+      toast({
+        title: "Shot Updated",
+        description: `Shot ${editingShot.shotNumber} details updated`
+      });
+    }
+    setEditDialogOpen(false);
+    setEditingShot(null);
+  };
+
+  const handleDeleteShot = (shotId: string) => {
+    onShotDelete(shotId);
+    setSelectedShot(null);
+    toast({
+      title: "Shot Deleted",
+      description: "Shot removed from hole"
+    });
+  };
   
   return (
     <div className="space-y-4">
@@ -356,19 +396,28 @@ export function BlueGolfMap({
               </div>
             </div>
             
-            {selectedShot && (
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={() => {
-                  onShotDelete(selectedShot);
-                  setSelectedShot(null);
-                }}
-              >
-                <Minus className="w-4 h-4 mr-1" />
-                Delete Shot
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {selectedShotData && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditShot(selectedShotData)}
+                  >
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDeleteShot(selectedShot!)}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Delete
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </Card>
@@ -377,7 +426,7 @@ export function BlueGolfMap({
       {currentHoleShots.length > 0 && (
         <Card className="p-4">
           <h4 className="font-medium mb-3">Hole {currentHole?.holeNumber} Summary</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm mb-4">
             <div>
               <span className="text-muted-foreground">Total Shots:</span>
               <span className="ml-2 font-medium">{currentHoleShots.length}</span>
@@ -387,8 +436,88 @@ export function BlueGolfMap({
               <span className="ml-2 font-medium">{currentHole?.par}</span>
             </div>
           </div>
+          
+          {/* Shot List */}
+          <div className="space-y-2">
+            <h5 className="text-sm font-medium text-muted-foreground">Shots:</h5>
+            {currentHoleShots.map((shot) => (
+              <div 
+                key={shot.id} 
+                className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${
+                  selectedShot === shot.id ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
+                }`}
+                onClick={() => setSelectedShot(selectedShot === shot.id ? null : shot.id)}
+              >
+                <div className="flex items-center gap-2">
+                  <div className={`w-6 h-6 rounded-full ${selectedShot === shot.id ? 'bg-primary' : 'bg-blue-500'} text-white flex items-center justify-center text-xs font-bold`}>
+                    {shot.shotNumber}
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">{shot.club}</span>
+                    <span className="text-muted-foreground ml-2">({shot.lie})</span>
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {shot.distance}yd
+                </div>
+              </div>
+            ))}
+          </div>
         </Card>
       )}
+
+      {/* Edit Shot Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Shot {editingShot?.shotNumber}</DialogTitle>
+          </DialogHeader>
+          {editingShot && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Club</label>
+                <Select 
+                  value={editingShot.club} 
+                  onValueChange={(value) => setEditingShot({...editingShot, club: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clubs.map(club => (
+                      <SelectItem key={club} value={club}>{club}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Lie</label>
+                <Select 
+                  value={editingShot.lie} 
+                  onValueChange={(value) => setEditingShot({...editingShot, lie: value as Shot['lie']})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {lies.map(lie => (
+                      <SelectItem key={lie} value={lie}>{lie}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
