@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, BarChart3, Trophy, MapPin, Navigation, Download, Target } from "lucide-react";
+import { Play, BarChart3, Trophy, MapPin, Navigation, Download, Target, Search, Filter } from "lucide-react";
 import { ScoreCard } from "@/components/golf/ScoreCard";
 import { GPS } from "@/components/golf/GPS";
 import { ShotTrackingMap } from "@/components/golf/ShotTrackingMap";
@@ -20,7 +21,44 @@ const Index = () => {
   const [currentHole, setCurrentHole] = useState(1);
   const [shotTrackingRound, setShotTrackingRound] = useState<ShotTrackingRound | null>(null);
   const [activeView, setActiveView] = useState<'home' | 'courses' | 'play'>('home');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [locationFilter, setLocationFilter] = useState('all');
   const { toast } = useToast();
+
+  // Filter courses based on search and location
+  const filteredCourses = courses.filter(course => {
+    const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         course.location.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesLocation = locationFilter === 'all' || 
+                           course.location.toLowerCase().includes(locationFilter.toLowerCase());
+    
+    return matchesSearch && matchesLocation;
+  });
+
+  // Get unique locations for filter
+  const locations = ['all', ...Array.from(new Set(courses.map(course => {
+    const parts = course.location.split(', ');
+    return parts[parts.length - 1]; // Get the state/region part
+  })))];
+
+  // Group courses by region for better organization
+  const groupedCourses = filteredCourses.reduce((acc, course) => {
+    const region = course.location.includes('Manhattan') || course.location.includes('Brooklyn') || 
+                  course.location.includes('Queens') || course.location.includes('Bronx') || 
+                  course.location.includes('Staten Island') ? 'NYC' :
+                  course.location.includes('Long Island') || course.location.includes('Farmingdale') ||
+                  course.location.includes('Nassau') || course.location.includes('Suffolk') ? 'Long Island' :
+                  course.location.includes('Westchester') || course.location.includes('Hudson Valley') ? 'Westchester/Hudson Valley' :
+                  course.location.includes('Buffalo') || course.location.includes('Rochester') || 
+                  course.location.includes('Niagara') ? 'Western NY' :
+                  course.location.includes('Syracuse') || course.location.includes('Central') ? 'Central NY' :
+                  'Upstate NY';
+    
+    if (!acc[region]) acc[region] = [];
+    acc[region].push(course);
+    return acc;
+  }, {} as Record<string, Course[]>);
 
   const startNewRound = () => {
     const newRound: Round = {
@@ -151,6 +189,47 @@ const Index = () => {
               </div>
 
               <div className="space-y-8">
+                {/* Search and Filter Section */}
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                    <Input
+                      placeholder="Search courses by name or location..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-14 text-lg border-2 hover:border-primary/50 transition-colors"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-4 items-center">
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Filter by region:</span>
+                    </div>
+                    <Select value={locationFilter} onValueChange={setLocationFilter}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Regions</SelectItem>
+                        <SelectItem value="nyc">NYC</SelectItem>
+                        <SelectItem value="long island">Long Island</SelectItem>
+                        <SelectItem value="westchester">Westchester</SelectItem>
+                        <SelectItem value="upstate">Upstate</SelectItem>
+                        <SelectItem value="western">Western NY</SelectItem>
+                        <SelectItem value="central">Central NY</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="text-center">
+                    <Badge variant="outline" className="text-sm">
+                      {filteredCourses.length} of {courses.length} courses found
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Course Selection */}
                 <div className="max-w-md mx-auto">
                   <Select
                     value={selectedCourse.name}
@@ -163,13 +242,23 @@ const Index = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="max-h-80">
-                      {courses.map((course) => (
-                        <SelectItem key={course.name} value={course.name} className="p-4">
-                          <div className="text-left">
-                            <div className="font-semibold text-base">{course.name}</div>
-                            <div className="text-sm text-muted-foreground">{course.location}</div>
+                      {Object.entries(groupedCourses).map(([region, regionCourses]) => (
+                        <div key={region}>
+                          <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">
+                            {region} ({regionCourses.length})
                           </div>
-                        </SelectItem>
+                          {regionCourses.map((course) => (
+                            <SelectItem key={course.name} value={course.name} className="p-4">
+                              <div className="text-left">
+                                <div className="font-semibold text-base">{course.name}</div>
+                                <div className="text-sm text-muted-foreground">{course.location}</div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  {course.holes.length} holes • Par {course.holes.reduce((sum, hole) => sum + hole.par, 0)}
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </div>
                       ))}
                     </SelectContent>
                   </Select>

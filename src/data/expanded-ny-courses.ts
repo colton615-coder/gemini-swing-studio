@@ -507,31 +507,26 @@ export const expandedNYCourses: Course[] = [
     holes: generateHoles(18, 72, 'central')
   },
   {
-    name: "Liverpool Golf & Country Club",
-    location: "Liverpool, NY",
+    name: "Highland Park Golf Course",
+    location: "Syracuse, NY",
+    holes: generateHoles(18, 70, 'central')
+  },
+  {
+    name: "Skaneateles Country Club",
+    location: "Skaneateles, NY",
     holes: generateHoles(18, 72, 'central')
+  },
+  {
+    name: "Turning Stone Resort Casino Golf Courses",
+    location: "Verona, NY",
+    holes: generateHoles(54, 216, 'central')
   },
 
   // Western NY Courses
   {
-    name: "Akron Golf Club",
-    location: "Akron, NY",
-    holes: generateHoles(18, 72, 'western')
-  },
-  {
-    name: "Amherst Audubon Golf Course",
-    location: "Amherst, NY",
-    holes: generateHoles(18, 72, 'western')
-  },
-  {
-    name: "Beaver Island State Park Golf Course",
-    location: "Grand Island, NY",
-    holes: generateHoles(18, 72, 'western')
-  },
-  {
     name: "Delaware Park Golf Course",
     location: "Buffalo, NY",
-    holes: generateHoles(18, 71, 'western')
+    holes: generateHoles(18, 72, 'western')
   },
   {
     name: "Grover Cleveland Golf Course",
@@ -542,5 +537,190 @@ export const expandedNYCourses: Course[] = [
     name: "South Park Golf Course",
     location: "Buffalo, NY",
     holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Niagara Falls Country Club",
+    location: "Niagara Falls, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Hyde Park Golf Course",
+    location: "Niagara Falls, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Lockport Town & Country Club",
+    location: "Lockport, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Crag Burn Golf Club",
+    location: "East Aurora, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Elmwood Country Club",
+    location: "Batavia, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Genesee Valley Golf Club",
+    location: "Rochester, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Oak Hill Country Club East",
+    location: "Rochester, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+  {
+    name: "Oak Hill Country Club West",
+    location: "Rochester, NY",
+    holes: generateHoles(18, 72, 'western')
+  },
+
+  // Additional NYC Area Courses
+  {
+    name: "Trump Golf Links at Ferry Point",
+    location: "Bronx, NY",
+    holes: generateHoles(18, 72, 'nyc')
+  },
+  {
+    name: "Flushing Meadows Pitch & Putt",
+    location: "Queens, NY",
+    holes: generateHoles(18, 54, 'nyc')
+  },
+  {
+    name: "Randalls Island Golf Center",
+    location: "Manhattan, NY",
+    holes: generateHoles(18, 54, 'nyc')
+  },
+  {
+    name: "Chelsea Piers Golf Club",
+    location: "Manhattan, NY",
+    holes: generateHoles(18, 54, 'nyc')
+  },
+  {
+    name: "Richmond County Country Club",
+    location: "Staten Island, NY",
+    holes: generateHoles(18, 72, 'nyc')
+  },
+  {
+    name: "Freshkills Park Golf Course",
+    location: "Staten Island, NY",
+    holes: generateHoles(18, 72, 'nyc')
+  },
+
+  // Finger Lakes Region
+  {
+    name: "Seneca Lake Country Club",
+    location: "Geneva, NY",
+    holes: generateHoles(18, 72, 'central')
+  },
+  {
+    name: "Canandaigua Country Club",
+    location: "Canandaigua, NY",
+    holes: generateHoles(18, 72, 'central')
+  },
+  {
+    name: "Skaneateles Country Club",
+    location: "Skaneateles, NY",
+    holes: generateHoles(18, 72, 'central')
+  },
+  {
+    name: "Auburn Golf & Country Club",
+    location: "Auburn, NY",
+    holes: generateHoles(18, 72, 'central')
+  },
+  {
+    name: "Owasco Country Club",
+    location: "Auburn, NY",
+    holes: generateHoles(18, 72, 'central')
+  },
+
+  // Hudson Valley
+  {
+    name: "Apple Greens Golf Course",
+    location: "Highland, NY",
+    holes: generateHoles(18, 72, 'westchester')
+  },
+  {
+    name: "McCann Memorial Golf Course",
+    location: "Poughkeepsie, NY",
+    holes: generateHoles(18, 72, 'westchester')
+  },
+  {
+    name: "Dutchess Golf & Country Club",
+    location: "Poughkeepsie, NY",
+    holes: generateHoles(18, 71, 'westchester')
+  },
+  {
+    name: "Vassar Golf & Country Club",
+    location: "Poughkeepsie, NY",
+    holes: generateHoles(18, 72, 'westchester')
+  },
+  {
+    name: "Wallkill Golf Club",
+    location: "Middletown, NY",
+    holes: generateHoles(18, 72, 'westchester')
+  },
+  {
+    name: "New Paltz Golf Course",
+    location: "New Paltz, NY",
+    holes: generateHoles(18, 72, 'westchester')
+  },
+
+  // Capital District
+  {
+    name: "Capital Hills at Albany",
+    location: "Albany, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Normanside Country Club",
+    location: "Delmar, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Shaker Ridge Country Club",
+    location: "Albany, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Town of Colonie Golf Course",
+    location: "Colonie, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Frear Park Golf Course",
+    location: "Troy, NY",
+    holes: generateHoles(18, 70, 'upstate')
+  },
+
+  // North Country
+  {
+    name: "Adirondack Golf & Country Club",
+    location: "Peru, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Malone Golf Club",
+    location: "Malone, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Plattsburgh Country Club",
+    location: "Plattsburgh, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Tupper Lake Golf Club",
+    location: "Tupper Lake, NY",
+    holes: generateHoles(18, 72, 'upstate')
+  },
+  {
+    name: "Clifton Springs Country Club",
+    location: "Clifton Springs, NY",
+    holes: generateHoles(18, 72, 'central')
   }
 ];
