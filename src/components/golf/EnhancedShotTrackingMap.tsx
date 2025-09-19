@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,14 @@ import { Course3DViewer } from "./Course3DViewer";
 import { ShotAnalytics } from "./ShotAnalytics";
 import { generateHeatMapData } from "@/utils/shot-analytics";
 import { useToast } from "@/hooks/use-toast";
+
+// Fix default marker icons in Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
 interface EnhancedShotTrackingMapProps {
   currentHole?: Hole;
@@ -44,109 +52,129 @@ export function EnhancedShotTrackingMap({
   onFeatureDelete
 }: EnhancedShotTrackingMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const mapboxToken = 'pk.eyJ1IjoiY29sdG9uNjE1IiwiYSI6ImNtZTkyd3ZjbzBmeXAycXFhdXMwYW1hZ28ifQ.s_B7gcqGC9aoAdV418nsOg';
+  const map = useRef<L.Map | null>(null);
   
   // Enhanced visualization controls
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showFeatures, setShowFeatures] = useState(true);
-  const [showElevation, setShowElevation] = useState(false);
+  const [showSatellite, setShowSatellite] = useState(true);
   const [showTrajectories, setShowTrajectories] = useState(true);
   const [heatmapOpacity, setHeatmapOpacity] = useState([0.6]);
   const [selectedFeatureTypes, setSelectedFeatureTypes] = useState<string[]>(['all']);
   
   const { toast } = useToast();
 
+  const createCustomIcon = (color: string, size: number = 20) => {
+    return L.divIcon({
+      className: 'custom-marker',
+      html: `<div style="
+        width: ${size}px;
+        height: ${size}px;
+        background: ${color};
+        border: 2px solid white;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      "></div>`,
+      iconSize: [size, size],
+      iconAnchor: [size/2, size/2]
+    });
+  };
+
   const initializeEnhancedMap = () => {
     if (!mapContainer.current || !currentHole) return;
 
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/satellite-v9',
-      center: [currentHole.teeCoords.lng, currentHole.teeCoords.lat],
-      zoom: 16,
-      pitch: 45,
-    });
-
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
+    // Create map
+    map.current = L.map(mapContainer.current).setView(
+      [currentHole.teeCoords.lat, currentHole.teeCoords.lng], 
+      16
     );
 
-    map.current.on('load', () => {
-      if (!map.current || !currentHole) return;
-
-      // Add base markers
-      addBaseMarkers();
-      
-      // Add enhanced features
-      if (showFeatures) addCourseFeatures();
-      if (showHeatmap) addHeatmapLayer();
-      if (showTrajectories) addShotTrajectories();
-      if (showElevation) addElevationContours();
+    // Add tile layers
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: '&copy; Esri &copy; OpenStreetMap contributors',
+      maxZoom: 19
     });
+
+    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    });
+
+    // Add default layer
+    if (showSatellite) {
+      satelliteLayer.addTo(map.current);
+    } else {
+      streetLayer.addTo(map.current);
+    }
+
+    // Layer control
+    const baseMaps = {
+      "Satellite": satelliteLayer,
+      "Street": streetLayer
+    };
+    L.control.layers(baseMaps).addTo(map.current);
+
+    // Add base markers
+    addBaseMarkers();
+    
+    // Add enhanced features
+    if (showFeatures) addCourseFeatures();
+    if (showHeatmap) addHeatmapLayer();
+    if (showTrajectories) addShotTrajectories();
   };
 
   const addBaseMarkers = () => {
     if (!map.current || !currentHole) return;
 
-    // Tee marker with enhanced popup
-    new mapboxgl.Marker({ color: '#22c55e', scale: 1.2 })
-      .setLngLat([currentHole.teeCoords.lng, currentHole.teeCoords.lat])
-      .setPopup(new mapboxgl.Popup().setHTML(`
+    // Tee marker
+    const teeIcon = createCustomIcon('#22c55e', 24);
+    L.marker([currentHole.teeCoords.lat, currentHole.teeCoords.lng], { icon: teeIcon })
+      .addTo(map.current!)
+      .bindPopup(`
         <div class="p-3">
           <div class="flex items-center justify-between mb-2">
             <strong>Hole ${currentHole.holeNumber} Tee</strong>
             <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Par ${currentHole.par}</span>
           </div>
           <p class="text-sm text-gray-600">${currentHole.distance} yards</p>
-          <p class="text-xs text-gray-500 mt-1">Par ${currentHole.par} • ${currentHole.distance} yards</p>
         </div>
-      `))
-      .addTo(map.current);
+      `);
 
-    // Green marker with enhanced popup
-    new mapboxgl.Marker({ color: '#ef4444', scale: 1.2 })
-      .setLngLat([currentHole.greenCoords.lng, currentHole.greenCoords.lat])
-      .setPopup(new mapboxgl.Popup().setHTML(`
+    // Green marker
+    const greenIcon = createCustomIcon('#ef4444', 24);
+    L.marker([currentHole.greenCoords.lat, currentHole.greenCoords.lng], { icon: greenIcon })
+      .addTo(map.current!)
+      .bindPopup(`
         <div class="p-3">
           <strong>Hole ${currentHole.holeNumber} Green</strong>
           <p class="text-sm text-gray-600 mt-1">Target destination</p>
         </div>
-      `))
-      .addTo(map.current);
+      `);
 
-    // Enhanced shot markers
+    // Shot markers
     const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
-    currentHoleShots.forEach((shot, index) => {
-      const marker = new mapboxgl.Marker({ 
-        color: getShotColor(shot.lie), 
-        scale: 0.8 
-      })
-      .setLngLat([shot.coordinates.lng, shot.coordinates.lat])
-      .setPopup(new mapboxgl.Popup().setHTML(`
-        <div class="p-3">
-          <div class="flex items-center justify-between mb-2">
-            <strong>Shot ${shot.shotNumber}</strong>
-            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${shot.lie}</span>
-          </div>
-          <div class="space-y-1 text-sm">
-            <div class="flex justify-between">
-              <span>Club:</span>
-              <span class="font-medium">${shot.club}</span>
+    currentHoleShots.forEach((shot) => {
+      const shotIcon = createCustomIcon(getShotColor(shot.lie), 16);
+      L.marker([shot.coordinates.lat, shot.coordinates.lng], { icon: shotIcon })
+        .addTo(map.current!)
+        .bindPopup(`
+          <div class="p-3">
+            <div class="flex items-center justify-between mb-2">
+              <strong>Shot ${shot.shotNumber}</strong>
+              <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${shot.lie}</span>
             </div>
-            <div class="flex justify-between">
-              <span>Distance to green:</span>
-              <span class="font-medium">${shot.distance} yds</span>
+            <div class="space-y-1 text-sm">
+              <div class="flex justify-between">
+                <span>Club:</span>
+                <span class="font-medium">${shot.club}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Distance to green:</span>
+                <span class="font-medium">${shot.distance} yds</span>
+              </div>
             </div>
           </div>
-        </div>
-      `))
-      .addTo(map.current!);
+        `);
     });
   };
 
@@ -157,85 +185,62 @@ export function EnhancedShotTrackingMap({
     
     holeFeatures.forEach(feature => {
       if (selectedFeatureTypes.includes('all') || selectedFeatureTypes.includes(feature.type)) {
-        // Add feature visualization based on type
         const color = getFeatureColor(feature.type);
         const coordinates = feature.coordinates;
         
         if (coordinates.length === 1) {
-          // Point feature (tree, building)
-          new mapboxgl.Marker({ color, scale: 0.6 })
-            .setLngLat([coordinates[0].lng, coordinates[0].lat])
-            .setPopup(new mapboxgl.Popup().setHTML(`
+          const featureIcon = createCustomIcon(color, 12);
+          L.marker([coordinates[0].lat, coordinates[0].lng], { icon: featureIcon })
+            .addTo(map.current!)
+            .bindPopup(`
               <div class="p-2">
                 <strong>${feature.name || feature.type}</strong>
                 ${feature.notes ? `<p class="text-sm mt-1">${feature.notes}</p>` : ''}
               </div>
-            `))
-            .addTo(map.current!);
+            `);
         }
-        // Area features would require more complex GeoJSON implementation
       }
     });
   };
 
   const addHeatmapLayer = () => {
+    // Leaflet heatmap would require additional plugin
+    // For now, we'll show shot density with circles
     if (!map.current) return;
 
     const heatmapData = generateHeatMapData(shots, 30);
     
-    // Convert to GeoJSON format
-    const geojson = {
-      type: 'FeatureCollection' as const,
-      features: heatmapData.map(point => ({
-        type: 'Feature' as const,
-        properties: {
-          intensity: point.intensity,
-          shotCount: point.shotCount
-        },
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [point.lng, point.lat]
-        }
-      }))
-    };
-
-    map.current.addSource('heatmap', {
-      type: 'geojson',
-      data: geojson
-    });
-
-    map.current.addLayer({
-      id: 'heatmap-layer',
-      type: 'heatmap',
-      source: 'heatmap',
-      paint: {
-        'heatmap-weight': ['interpolate', ['linear'], ['get', 'intensity'], 0, 0, 10, 1],
-        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 0, 1, 18, 3],
-        'heatmap-color': [
-          'interpolate',
-          ['linear'],
-          ['heatmap-density'],
-          0, 'rgba(33,102,172,0)',
-          0.2, 'rgb(103,169,207)',
-          0.4, 'rgb(209,229,240)',
-          0.6, 'rgb(253,219,199)',
-          0.8, 'rgb(239,138,98)',
-          1, 'rgb(178,24,43)'
-        ],
-        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 0, 2, 18, 20],
-        'heatmap-opacity': heatmapOpacity[0]
-      }
+    heatmapData.forEach(point => {
+      L.circle([point.lat, point.lng], {
+        radius: point.intensity * 10,
+        fillColor: '#ff7800',
+        color: '#ff7800',
+        weight: 1,
+        opacity: heatmapOpacity[0],
+        fillOpacity: heatmapOpacity[0] * 0.5
+      }).addTo(map.current!)
+        .bindPopup(`Shot density: ${point.shotCount} shots`);
     });
   };
 
   const addShotTrajectories = () => {
-    // Implementation for shot trajectory lines
-    // Would connect shots in sequence for each hole
-  };
+    if (!map.current || !currentHole) return;
 
-  const addElevationContours = () => {
-    // Implementation for elevation contour lines
-    // Would require elevation data integration
+    const currentHoleShots = shots
+      .filter(s => s.holeNumber === currentHole.holeNumber)
+      .sort((a, b) => a.shotNumber - b.shotNumber);
+
+    if (currentHoleShots.length < 2) return;
+
+    const trajectoryPoints = currentHoleShots.map(shot => [shot.coordinates.lat, shot.coordinates.lng] as [number, number]);
+    
+    L.polyline(trajectoryPoints, {
+      color: '#3b82f6',
+      weight: 3,
+      opacity: 0.7,
+      dashArray: '5, 10'
+    }).addTo(map.current!)
+      .bindPopup(`Shot trajectory for hole ${currentHole.holeNumber}`);
   };
 
   const getShotColor = (lie: string): string => {
@@ -275,23 +280,22 @@ export function EnhancedShotTrackingMap({
         map.current.remove();
       }
     };
-  }, [currentHole]);
+  }, [currentHole, showSatellite]);
 
   // Update visualization layers when controls change
   useEffect(() => {
-    if (!map.current) return;
-
-    if (showHeatmap && !map.current.getLayer('heatmap-layer')) {
-      addHeatmapLayer();
-    } else if (!showHeatmap && map.current.getLayer('heatmap-layer')) {
-      map.current.removeLayer('heatmap-layer');
-      map.current.removeSource('heatmap');
+    if (map.current && currentHole) {
+      // Clear and re-add layers
+      map.current.eachLayer((layer) => {
+        if (layer instanceof L.Circle || layer instanceof L.Polyline) {
+          map.current!.removeLayer(layer);
+        }
+      });
+      
+      if (showHeatmap) addHeatmapLayer();
+      if (showTrajectories) addShotTrajectories();
     }
-
-    if (map.current.getLayer('heatmap-layer')) {
-      map.current.setPaintProperty('heatmap-layer', 'heatmap-opacity', heatmapOpacity[0]);
-    }
-  }, [showHeatmap, heatmapOpacity]);
+  }, [showHeatmap, showTrajectories, heatmapOpacity]);
 
   const currentHoleShots = shots.filter(s => currentHole && s.holeNumber === currentHole.holeNumber);
 
@@ -343,8 +347,8 @@ export function EnhancedShotTrackingMap({
                   </div>
                   
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Elevation Lines</label>
-                    <Switch checked={showElevation} onCheckedChange={setShowElevation} />
+                    <label className="text-sm font-medium">Satellite View</label>
+                    <Switch checked={showSatellite} onCheckedChange={setShowSatellite} />
                   </div>
                 </div>
 
@@ -371,7 +375,7 @@ export function EnhancedShotTrackingMap({
               <div ref={mapContainer} className="h-96 w-full" />
               <div className="p-4 border-t bg-muted/30">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Interactive course mapping with advanced visualization</span>
+                  <span>🆓 Free OpenStreetMap • No API keys required</span>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
