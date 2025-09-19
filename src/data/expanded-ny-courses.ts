@@ -321,6 +321,11 @@ export const expandedNYCourses: Course[] = [
     holes: generateHoles(18, 71, 'longisland')
   },
   {
+    name: "Pine Ridge Golf Club",
+    location: "Coram, NY",
+    holes: generateHoles(18, 70, 'longisland')
+  },
+  {
     name: "Brentwood Country Club",
     location: "Brentwood, NY",
     holes: generateHoles(18, 72, 'longisland')
