@@ -56,8 +56,57 @@ const Index = () => {
     const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.location.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesLocation = locationFilter === 'all' || 
-                           course.location.toLowerCase().includes(locationFilter.toLowerCase());
+    let matchesLocation = locationFilter === 'all';
+    
+    if (!matchesLocation) {
+      const location = course.location.toLowerCase();
+      switch (locationFilter) {
+        case 'nyc':
+          matchesLocation = location.includes('manhattan') || location.includes('brooklyn') || 
+                           location.includes('queens') || location.includes('bronx') || 
+                           location.includes('staten island');
+          break;
+        case 'longisland':
+          matchesLocation = location.includes('farmingdale') || location.includes('babylon') ||
+                           location.includes('coram') || location.includes('west babylon') ||
+                           location.includes('nassau') || location.includes('suffolk') ||
+                           location.includes('montauk') || location.includes('kings park') ||
+                           location.includes('wantagh') || location.includes('east rockaway') ||
+                           location.includes('hicksville') || location.includes('roslyn') ||
+                           location.includes('east meadow') || location.includes('glen cove') ||
+                           location.includes('port washington') || location.includes('lido beach') ||
+                           location.includes('merrick') || location.includes('valley stream') ||
+                           location.includes('sag harbor') || location.includes('middle island') ||
+                           location.includes('great river') || location.includes('west sayville') ||
+                           location.includes('smithtown') || location.includes('southampton') ||
+                           location.includes('bay shore') || location.includes('manorville');
+          break;
+        case 'westchester':
+          matchesLocation = location.includes('yonkers') || location.includes('ossining') ||
+                           location.includes('white plains') || location.includes('yorktown heights') ||
+                           location.includes('scarsdale') || location.includes('pleasant valley') ||
+                           location.includes('congers') || location.includes('staatsburg');
+          break;
+        case 'upstate':
+          matchesLocation = location.includes('saratoga springs') || location.includes('amsterdam') ||
+                           location.includes('colonie') || location.includes('schenectady') ||
+                           location.includes('troy') || location.includes('ballston spa') ||
+                           location.includes('ogdensburg') || location.includes('fineview');
+          break;
+        case 'central':
+          matchesLocation = location.includes('fayetteville') || location.includes('sterling') ||
+                           location.includes('horseheads') || location.includes('chenango forks') ||
+                           location.includes('akron') || location.includes('syracuse') ||
+                           location.includes('skaneateles') || location.includes('verona');
+          break;
+        case 'western':
+          matchesLocation = location.includes('painted post') || location.includes('buffalo') ||
+                           location.includes('niagara falls') || location.includes('lockport') ||
+                           location.includes('east aurora') || location.includes('batavia') ||
+                           location.includes('rochester');
+          break;
+      }
+    }
     
     return matchesSearch && matchesLocation;
   });
