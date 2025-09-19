@@ -29,6 +29,7 @@ interface ShotTrackingMapProps {
 export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }: ShotTrackingMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
+  const shotLayer = useRef<L.LayerGroup | null>(null);
   const [newShotClub, setNewShotClub] = useState<string>('Driver');
   const [newShotLie, setNewShotLie] = useState<'fairway' | 'rough' | 'sand' | 'green' | 'tee'>('tee');
   const { toast } = useToast();
@@ -55,48 +56,19 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
     });
   };
 
-  const initializeMap = () => {
-    if (!mapContainer.current || !currentHole) return;
+  const updateShotMarkers = () => {
+    if (!map.current || !currentHole) return;
 
-    // Create map centered on tee
-    map.current = L.map(mapContainer.current).setView(
-      [currentHole.teeCoords.lat, currentHole.teeCoords.lng], 
-      16
-    );
+    if (!shotLayer.current) {
+      shotLayer.current = L.layerGroup().addTo(map.current);
+    }
+    shotLayer.current.clearLayers();
 
-    // Add satellite tile layer
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; Esri &copy; OpenStreetMap contributors',
-      maxZoom: 19
-    }).addTo(map.current);
-
-    // Add tee marker
-    const teeIcon = createCustomIcon('#22c55e');
-    L.marker([currentHole.teeCoords.lat, currentHole.teeCoords.lng], { icon: teeIcon })
-      .addTo(map.current!)
-      .bindPopup(`
-        <div class="p-2">
-          <strong>Hole ${currentHole.holeNumber} Tee</strong><br>
-          Par ${currentHole.par} • ${currentHole.distance} yards
-        </div>
-      `);
-
-    // Add green marker
-    const greenIcon = createCustomIcon('#ef4444');
-    L.marker([currentHole.greenCoords.lat, currentHole.greenCoords.lng], { icon: greenIcon })
-      .addTo(map.current!)
-      .bindPopup(`
-        <div class="p-2">
-          <strong>Hole ${currentHole.holeNumber} Green</strong>
-        </div>
-      `);
-
-    // Add existing shots
     const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
     currentHoleShots.forEach((shot) => {
       const shotIcon = createCustomIcon('#3b82f6');
       L.marker([shot.coordinates.lat, shot.coordinates.lng], { icon: shotIcon })
-        .addTo(map.current!)
+        .addTo(shotLayer.current!)
         .bindPopup(`
           <div class="p-2">
             <strong>Shot ${shot.shotNumber}</strong><br>
@@ -106,38 +78,107 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
           </div>
         `);
     });
+  };
 
-    // Add click handler for adding shots
-    map.current.on('click', (e: L.LeafletMouseEvent) => {
-      if (!currentHole) return;
-      
-      const shotNumber = shots.filter(s => s.holeNumber === currentHole.holeNumber).length + 1;
-      const distance = calculateDistance(
-        { lat: e.latlng.lat, lng: e.latlng.lng },
-        currentHole.greenCoords
+  const initializeMap = () => {
+    if (!mapContainer.current || !currentHole) return;
+
+    try {
+      // Clean up any existing instance safely
+      if (map.current) {
+        map.current.off();
+        map.current.remove();
+        map.current = null;
+      }
+      // Ensure container is empty
+      mapContainer.current.innerHTML = '';
+
+      // Create map centered on tee
+      map.current = L.map(mapContainer.current).setView(
+        [currentHole.teeCoords.lat, currentHole.teeCoords.lng], 
+        16
       );
 
-      onShotAdd({
-        holeNumber: currentHole.holeNumber,
-        shotNumber,
-        coordinates: { lat: e.latlng.lat, lng: e.latlng.lng },
-        club: newShotClub,
-        distance,
-        lie: newShotLie
+      // Add satellite tile layer
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: '&copy; Esri &copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map.current);
+
+      // Add tee marker
+      const teeIcon = createCustomIcon('#22c55e');
+      L.marker([currentHole.teeCoords.lat, currentHole.teeCoords.lng], { icon: teeIcon })
+        .addTo(map.current!)
+        .bindPopup(`
+          <div class="p-2">
+            <strong>Hole ${currentHole.holeNumber} Tee</strong><br>
+            Par ${currentHole.par} • ${currentHole.distance} yards
+          </div>
+        `);
+
+      // Add green marker
+      const greenIcon = createCustomIcon('#ef4444');
+      L.marker([currentHole.greenCoords.lat, currentHole.greenCoords.lng], { icon: greenIcon })
+        .addTo(map.current!)
+        .bindPopup(`
+          <div class="p-2">
+            <strong>Hole ${currentHole.holeNumber} Green</strong>
+          </div>
+        `);
+
+      // Shot markers layer and initial render
+      shotLayer.current = L.layerGroup().addTo(map.current);
+      updateShotMarkers();
+
+      // Add click handler for adding shots
+      map.current.on('click', (e: L.LeafletMouseEvent) => {
+        try {
+          if (!currentHole) return;
+          
+          const shotNumber = shots.filter(s => s.holeNumber === currentHole.holeNumber).length + 1;
+          const distance = calculateDistance(
+            { lat: e.latlng.lat, lng: e.latlng.lng },
+            currentHole.greenCoords
+          );
+
+          onShotAdd({
+            holeNumber: currentHole.holeNumber,
+            shotNumber,
+            coordinates: { lat: e.latlng.lat, lng: e.latlng.lng },
+            club: newShotClub,
+            distance,
+            lie: newShotLie
+          });
+
+          console.log('Shot added from map click', { hole: currentHole.holeNumber, shotNumber });
+          toast({
+            title: "Shot Added",
+            description: `Shot ${shotNumber} with ${newShotClub} from ${newShotLie}`
+          });
+        } catch (err) {
+          console.error('Error handling map click', err);
+          toast({
+            title: "Error",
+            description: "There was a problem adding your shot.",
+            variant: "destructive"
+          });
+        }
       });
 
+      // Fit bounds to show tee and green
+      const bounds = L.latLngBounds([
+        [currentHole.teeCoords.lat, currentHole.teeCoords.lng],
+        [currentHole.greenCoords.lat, currentHole.greenCoords.lng]
+      ]);
+      map.current.fitBounds(bounds, { padding: [50, 50] });
+    } catch (err) {
+      console.error('Error initializing map', err);
       toast({
-        title: "Shot Added",
-        description: `Shot ${shotNumber} with ${newShotClub} from ${newShotLie}`
+        title: "Map Error",
+        description: "There was a problem initializing the map.",
+        variant: "destructive"
       });
-    });
-
-    // Fit bounds to show tee and green
-    const bounds = L.latLngBounds([
-      [currentHole.teeCoords.lat, currentHole.teeCoords.lng],
-      [currentHole.greenCoords.lat, currentHole.greenCoords.lng]
-    ]);
-    map.current.fitBounds(bounds, { padding: [50, 50] });
+    }
   };
 
   const addCurrentLocationShot = async () => {
@@ -171,20 +212,37 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
   };
 
   useEffect(() => {
-    if (currentHole) {
-      // Clean up existing map
-      if (map.current) {
+    if (!currentHole) return;
+
+    // Reinitialize map when hole changes
+    if (map.current) {
+      try {
+        map.current.off();
         map.current.remove();
+      } catch (err) {
+        console.error('Error removing map', err);
       }
-      initializeMap();
+      map.current = null;
     }
+    initializeMap();
 
     return () => {
       if (map.current) {
-        map.current.remove();
+        try {
+          map.current.off();
+          map.current.remove();
+        } catch (err) {
+          console.error('Error cleaning up map', err);
+        }
+        map.current = null;
       }
     };
-  }, [currentHole, shots]);
+  }, [currentHole]);
+
+  useEffect(() => {
+    // Update shot markers without recreating the map
+    updateShotMarkers();
+  }, [shots, currentHole]);
 
   const currentHoleShots = shots.filter(s => currentHole && s.holeNumber === currentHole.holeNumber);
 
