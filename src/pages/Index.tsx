@@ -118,128 +118,137 @@ const Index = () => {
 
   if (activeView === 'home') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-        <div className="container mx-auto px-4 py-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent animate-fade-in">
-              GeminiGolf Pro
-            </h1>
-            <p className="text-xl text-muted-foreground">Professional Golf Tracking & GPS</p>
-            <Badge variant="outline" className="mt-2">
-              {courses.length} NY Public Courses Available
-            </Badge>
-          </div>
-
-          {/* Main Actions */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto mb-8">
-            <Card className="p-6 hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer" onClick={() => setActiveView('courses')}>
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <Download className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold">Browse NY Courses</h3>
-                <p className="text-muted-foreground">
-                  Download data for all {courses.length} public golf courses in New York
-                </p>
-                <Button className="w-full">
-                  View Courses
-                </Button>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <Play className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold">Quick Round</h3>
-                <p className="text-muted-foreground">
-                  Start playing {selectedCourse.name} with GPS tracking
-                </p>
-                <Button onClick={startNewRound} className="w-full">
-                  Start Round
-                </Button>
-              </div>
-            </Card>
-
-            <Card className="p-6 hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <div className="text-center space-y-4">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <Target className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold">Shot Tracking</h3>
-                <p className="text-muted-foreground">
-                  Interactive maps with precise shot tracking
-                </p>
-                <Button variant="outline" className="w-full">
-                  Learn More
-                </Button>
-              </div>
-            </Card>
-          </div>
-
-          {/* Course Selection */}
-          <Card className="max-w-md mx-auto mb-8 p-6 shadow-lg">
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium block mb-2">Select Course</label>
-                <Select
-                  value={selectedCourse.name}
-                  onValueChange={(value) => {
-                    const course = courses.find(c => c.name === value);
-                    if (course) setSelectedCourse(course);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {courses.map((course) => (
-                      <SelectItem key={course.name} value={course.name}>
-                        <div>
-                          <div className="font-medium">{course.name}</div>
-                          <div className="text-sm text-muted-foreground">{course.location}</div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="p-4 bg-gradient-to-r from-primary/5 to-accent/5 rounded-lg border">
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <span className="font-medium">{selectedCourse.name}</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-2">{selectedCourse.location}</p>
-                <div className="flex gap-2">
-                  <Badge variant="outline">{selectedCourse.holes.length} Holes</Badge>
-                  <Badge variant="outline">Par {selectedCourse.holes.reduce((sum, hole) => sum + hole.par, 0)}</Badge>
-                </div>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/10 relative overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-accent/20 animate-pulse opacity-50" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-primary/30 to-transparent rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-accent/30 to-transparent rounded-full blur-3xl" />
+        
+        <div className="relative z-10 container mx-auto px-4 py-12">
+          {/* Hero Header */}
+          <div className="text-center mb-16 animate-fade-in">
+            <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 mb-8">
+              <Trophy className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium">Professional Golf Course Selection</span>
             </div>
-          </Card>
+            <h1 className="text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent leading-tight">
+              Choose Your<br />Perfect Course
+            </h1>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Select from {courses.length} premier New York public golf courses and start your professional golf experience
+            </p>
+          </div>
 
-          {/* Features */}
-          <div className="grid gap-4 md:grid-cols-3 max-w-3xl mx-auto">
-            <Card className="p-4 text-center hover:shadow-lg transition-shadow">
-              <BarChart3 className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <h3 className="font-semibold mb-1">Advanced Analytics</h3>
-              <p className="text-sm text-muted-foreground">Detailed scoring and performance tracking</p>
-            </Card>
+          {/* Main Course Selection Card */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <Card className="p-12 shadow-2xl border-0 bg-white/95 backdrop-blur-sm hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
+              <div className="text-center mb-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                  <MapPin className="w-10 h-10 text-white" />
+                </div>
+                <h2 className="text-3xl font-bold mb-2">Select Your Course</h2>
+                <p className="text-muted-foreground text-lg">Choose from the finest public courses in New York</p>
+              </div>
 
-            <Card className="p-4 text-center hover:shadow-lg transition-shadow">
-              <Navigation className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <h3 className="font-semibold mb-1">GPS Precision</h3>
-              <p className="text-sm text-muted-foreground">Real-time yardages and distances</p>
-            </Card>
+              <div className="space-y-8">
+                <div className="max-w-md mx-auto">
+                  <Select
+                    value={selectedCourse.name}
+                    onValueChange={(value) => {
+                      const course = courses.find(c => c.name === value);
+                      if (course) setSelectedCourse(course);
+                    }}
+                  >
+                    <SelectTrigger className="h-14 text-lg border-2 hover:border-primary/50 transition-colors">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80">
+                      {courses.map((course) => (
+                        <SelectItem key={course.name} value={course.name} className="p-4">
+                          <div className="text-left">
+                            <div className="font-semibold text-base">{course.name}</div>
+                            <div className="text-sm text-muted-foreground">{course.location}</div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <Card className="p-4 text-center hover:shadow-lg transition-shadow">
-              <Trophy className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <h3 className="font-semibold mb-1">Handicap Tracking</h3>
-              <p className="text-sm text-muted-foreground">Monitor your improvement over time</p>
+                {/* Selected Course Details */}
+                <div className="bg-gradient-to-r from-primary/5 via-transparent to-accent/5 rounded-2xl p-8 border border-primary/10">
+                  <div className="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                          <Navigation className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold">{selectedCourse.name}</h3>
+                          <p className="text-muted-foreground">{selectedCourse.location}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 mt-6">
+                        <div className="text-center p-4 bg-white/50 rounded-xl">
+                          <div className="text-2xl font-bold text-primary">{selectedCourse.holes.length}</div>
+                          <div className="text-sm text-muted-foreground">Holes</div>
+                        </div>
+                        <div className="text-center p-4 bg-white/50 rounded-xl">
+                          <div className="text-2xl font-bold text-accent">
+                            {selectedCourse.holes.reduce((sum, hole) => sum + hole.par, 0)}
+                          </div>
+                          <div className="text-sm text-muted-foreground">Total Par</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col justify-center">
+                      <Button 
+                        onClick={startNewRound} 
+                        size="lg" 
+                        className="h-16 text-lg bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      >
+                        <Play className="w-6 h-6 mr-3" />
+                        Start Your Round
+                      </Button>
+                      <p className="text-center text-sm text-muted-foreground mt-3">
+                        Begin professional golf tracking with GPS precision
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </Card>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="max-w-3xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="p-6 text-center bg-white/80 backdrop-blur-sm border-0 hover:bg-white/90 transition-all duration-300 hover:scale-105">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Target className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">Precision Tracking</h3>
+                <p className="text-sm text-muted-foreground">Advanced shot analysis and GPS mapping</p>
+              </Card>
+
+              <Card className="p-6 text-center bg-white/80 backdrop-blur-sm border-0 hover:bg-white/90 transition-all duration-300 hover:scale-105">
+                <div className="w-12 h-12 bg-gradient-to-br from-accent/20 to-accent/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <BarChart3 className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">Performance Analytics</h3>
+                <p className="text-sm text-muted-foreground">Detailed scoring and improvement insights</p>
+              </Card>
+
+              <Card className="p-6 text-center bg-white/80 backdrop-blur-sm border-0 hover:bg-white/90 transition-all duration-300 hover:scale-105">
+                <div className="w-12 h-12 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Trophy className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-bold text-lg mb-2">Professional Grade</h3>
+                <p className="text-sm text-muted-foreground">Tournament-level course data and tools</p>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
