@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Download, Search, MapPin, Users, Clock } from "lucide-react";
 import { nyCourses } from "@/data/ny-courses";
+import { expandedNYCourses } from "@/data/expanded-ny-courses";
 import { Course } from "@/types/golf";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,7 +18,7 @@ export function CourseDownloader({ onCourseSelect }: CourseDownloaderProps) {
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const filteredCourses = nyCourses.filter(course =>
+  const filteredCourses = expandedNYCourses.filter(course =>
     course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     course.location.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -31,7 +32,7 @@ export function CourseDownloader({ onCourseSelect }: CourseDownloaderProps) {
   };
 
   const downloadSelectedCourses = () => {
-    const selectedData = nyCourses.filter(course => 
+    const selectedData = expandedNYCourses.filter(course => 
       selectedCourses.includes(course.name)
     );
 
@@ -54,7 +55,7 @@ export function CourseDownloader({ onCourseSelect }: CourseDownloaderProps) {
   };
 
   const downloadAllCourses = () => {
-    const dataStr = JSON.stringify(nyCourses, null, 2);
+    const dataStr = JSON.stringify(expandedNYCourses, null, 2);
     const dataBlob = new Blob([dataStr], {type: 'application/json'});
     
     const url = URL.createObjectURL(dataBlob);
@@ -68,7 +69,7 @@ export function CourseDownloader({ onCourseSelect }: CourseDownloaderProps) {
 
     toast({
       title: "All Courses Downloaded",
-      description: `${nyCourses.length} NY public courses downloaded`
+      description: `${expandedNYCourses.length} NY public courses downloaded`
     });
   };
 
@@ -79,12 +80,12 @@ export function CourseDownloader({ onCourseSelect }: CourseDownloaderProps) {
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-bold">New York Public Golf Courses</h2>
           <p className="text-muted-foreground">
-            Download course data for {nyCourses.length} public golf courses across New York
+            Download course data for {expandedNYCourses.length} public golf courses across New York
           </p>
           <div className="flex justify-center gap-4 mt-4">
             <Badge variant="outline" className="flex items-center gap-1">
               <MapPin className="w-3 h-3" />
-              {nyCourses.length} Courses
+              {expandedNYCourses.length} Courses
             </Badge>
             <Badge variant="outline" className="flex items-center gap-1">
               <Users className="w-3 h-3" />

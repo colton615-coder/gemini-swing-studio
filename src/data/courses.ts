@@ -1,4 +1,4 @@
 import { Course } from "@/types/golf";  
-import { nyCourses } from "@/data/ny-courses";
+import { expandedNYCourses } from "@/data/expanded-ny-courses";
 
-export const courses: Course[] = [...nyCourses];
+export const courses: Course[] = [...expandedNYCourses];
