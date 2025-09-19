@@ -22,7 +22,7 @@ interface ShotTrackingMapProps {
 export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }: ShotTrackingMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
+  const mapboxToken = 'pk.eyJ1IjoiY29sdG9uNjE1IiwiYSI6ImNtZTkyd3ZjbzBmeXAycXFhdXMwYW1hZ28ifQ.s_B7gcqGC9aoAdV418nsOg';
   const [newShotClub, setNewShotClub] = useState<string>('Driver');
   const [newShotLie, setNewShotLie] = useState<'fairway' | 'rough' | 'sand' | 'green' | 'tee'>('tee');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -35,7 +35,7 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
   ];
 
   const initializeMap = () => {
-    if (!mapContainer.current || !currentHole || !mapboxToken.trim()) return;
+    if (!mapContainer.current || !currentHole) return;
 
     mapboxgl.accessToken = mapboxToken;
     
@@ -146,7 +146,7 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
   };
 
   useEffect(() => {
-    if (currentHole && mapboxToken.trim()) {
+    if (currentHole) {
       // Clean up existing map
       if (map.current) {
         map.current.remove();
@@ -159,45 +159,14 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
         map.current.remove();
       }
     };
-  }, [currentHole, shots, mapboxToken]);
+  }, [currentHole, shots]);
 
   const currentHoleShots = shots.filter(s => currentHole && s.holeNumber === currentHole.holeNumber);
 
   return (
     <div className="space-y-4">
-      {/* Mapbox Token Input */}
-      {!mapboxToken.trim() && (
-        <Card className="p-4 border-orange-200 bg-orange-50/50">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-orange-600" />
-              <h3 className="font-semibold text-orange-900">Mapbox Token Required</h3>
-            </div>
-            <p className="text-sm text-orange-700">
-              To display the interactive map, please enter your Mapbox public token.
-            </p>
-            <div>
-              <label className="text-sm font-medium block mb-1">Mapbox Public Token</label>
-              <Input
-                type="text"
-                placeholder="pk.eyJ1..."
-                value={mapboxToken}
-                onChange={(e) => setMapboxToken(e.target.value)}
-                className="font-mono text-sm"
-              />
-            </div>
-            <div className="text-xs text-orange-600 space-y-1">
-              <p>Get your free token at: <strong>mapbox.com</strong></p>
-              <p>• Sign up/Login → Dashboard → Tokens → Copy your public token</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {mapboxToken.trim() && (
-        <>
-          {/* Shot Controls */}
-          <Card className="p-4">
+      {/* Shot Controls */}
+      <Card className="p-4">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold flex items-center gap-2">
@@ -288,8 +257,6 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
             ))}
           </div>
         </Card>
-      )}
-        </>
       )}
     </div>
   );
