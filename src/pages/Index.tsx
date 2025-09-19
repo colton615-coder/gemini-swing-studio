@@ -10,13 +10,13 @@ import { ScoreCard } from "@/components/golf/ScoreCard";
 import { GPS } from "@/components/golf/GPS";
 import { ShotTrackingMap } from "@/components/golf/ShotTrackingMap";
 import { CourseDownloader } from "@/components/golf/CourseDownloader";
-import { courses } from "@/data/courses";
+import { enhancedNYCourses } from "@/data/enhanced-ny-courses";
 import { Course, ScoreEntry, Round } from "@/types/golf";
 import { Shot, ShotTrackingRound } from "@/types/shot";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [selectedCourse, setSelectedCourse] = useState<Course>(courses[0]);
+  const [selectedCourse, setSelectedCourse] = useState<Course>(enhancedNYCourses[0]);
   const [currentRound, setCurrentRound] = useState<Round | null>(null);
   const [currentHole, setCurrentHole] = useState(1);
   const [shotTrackingRound, setShotTrackingRound] = useState<ShotTrackingRound | null>(null);
@@ -41,7 +41,7 @@ const Index = () => {
   };
 
   // Filter courses based on search and location
-  const filteredCourses = courses.filter(course => {
+  const filteredCourses = enhancedNYCourses.filter(course => {
     const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.location.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -52,7 +52,7 @@ const Index = () => {
   });
 
   // Get unique locations for filter
-  const locations = ['all', ...Array.from(new Set(courses.map(course => {
+  const locations = ['all', ...Array.from(new Set(enhancedNYCourses.map(course => {
     const parts = course.location.split(', ');
     return parts[parts.length - 1]; // Get the state/region part
   })))];
@@ -185,7 +185,7 @@ const Index = () => {
 
   const loadPastRound = (round: Round) => {
     setCurrentRound(round);
-    const course = courses.find(c => c.name === round.courseId) || courses[0];
+    const course = enhancedNYCourses.find(c => c.name === round.courseId) || enhancedNYCourses[0];
     setSelectedCourse(course);
     setActiveView('play');
     
@@ -224,7 +224,7 @@ const Index = () => {
               Choose Your<br />Perfect Course
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Select from {courses.length} premier New York public golf courses and start your professional golf experience
+              Select from {enhancedNYCourses.length} premier New York public golf courses and start your professional golf experience
             </p>
           </div>
 
@@ -275,7 +275,7 @@ const Index = () => {
                   
                   <div className="text-center">
                     <Badge variant="outline" className="text-sm">
-                      {filteredCourses.length} of {courses.length} courses found
+                      {filteredCourses.length} of {enhancedNYCourses.length} courses found
                     </Badge>
                   </div>
                 </div>
@@ -285,7 +285,7 @@ const Index = () => {
                   <Select
                     value={selectedCourse.name}
                     onValueChange={(value) => {
-                      const course = courses.find(c => c.name === value);
+                      const course = enhancedNYCourses.find(c => c.name === value);
                       if (course) setSelectedCourse(course);
                     }}
                   >
@@ -317,45 +317,169 @@ const Index = () => {
 
                 {/* Selected Course Details */}
                 <div className="bg-gradient-to-r from-primary/5 via-transparent to-accent/5 rounded-2xl p-8 border border-primary/10">
-                  <div className="grid md:grid-cols-2 gap-8 items-center">
-                    <div>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
-                          <Navigation className="w-6 h-6 text-primary" />
+                  <div className="space-y-8">
+                    {/* Course Header with Photo */}
+                    <div className="grid md:grid-cols-2 gap-8 items-center">
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                            <Navigation className="w-6 h-6 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-bold">{selectedCourse.name}</h3>
+                            <p className="text-muted-foreground">{selectedCourse.location}</p>
+                            {selectedCourse.architect && (
+                              <p className="text-sm text-primary">Designed by {selectedCourse.architect}</p>
+                            )}
+                            {selectedCourse.yearBuilt && (
+                              <p className="text-xs text-muted-foreground">Established {selectedCourse.yearBuilt}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-2xl font-bold">{selectedCourse.name}</h3>
-                          <p className="text-muted-foreground">{selectedCourse.location}</p>
+                        
+                        {selectedCourse.description && (
+                          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                            {selectedCourse.description}
+                          </p>
+                        )}
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="text-center p-4 bg-white/50 rounded-xl">
+                            <div className="text-2xl font-bold text-primary">{selectedCourse.holes.length}</div>
+                            <div className="text-sm text-muted-foreground">Holes</div>
+                          </div>
+                          <div className="text-center p-4 bg-white/50 rounded-xl">
+                            <div className="text-2xl font-bold text-accent">
+                              {selectedCourse.holes.reduce((sum, hole) => sum + hole.par, 0)}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Total Par</div>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 mt-6">
-                        <div className="text-center p-4 bg-white/50 rounded-xl">
-                          <div className="text-2xl font-bold text-primary">{selectedCourse.holes.length}</div>
-                          <div className="text-sm text-muted-foreground">Holes</div>
-                        </div>
-                        <div className="text-center p-4 bg-white/50 rounded-xl">
-                          <div className="text-2xl font-bold text-accent">
-                            {selectedCourse.holes.reduce((sum, hole) => sum + hole.par, 0)}
+
+                      <div>
+                        {selectedCourse.photos && (
+                          <div className="aspect-video rounded-xl overflow-hidden mb-4 shadow-lg">
+                            <img 
+                              src={selectedCourse.photos.hero} 
+                              alt={selectedCourse.name}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            />
                           </div>
-                          <div className="text-sm text-muted-foreground">Total Par</div>
-                        </div>
+                        )}
+                        
+                        <Button 
+                          onClick={startNewRound} 
+                          size="lg" 
+                          className="w-full h-16 text-lg bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                        >
+                          <Play className="w-6 h-6 mr-3" />
+                          Start Your Round
+                        </Button>
+                        <p className="text-center text-sm text-muted-foreground mt-3">
+                          Begin professional golf tracking with GPS precision
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex flex-col justify-center">
-                      <Button 
-                        onClick={startNewRound} 
-                        size="lg" 
-                        className="h-16 text-lg bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                      >
-                        <Play className="w-6 h-6 mr-3" />
-                        Start Your Round
-                      </Button>
-                      <p className="text-center text-sm text-muted-foreground mt-3">
-                        Begin professional golf tracking with GPS precision
-                      </p>
+                    {/* Enhanced Course Information */}
+                    <div className="grid md:grid-cols-3 gap-6">
+                      {/* Tee Box Information */}
+                      {selectedCourse.holes[0]?.teeBoxes && (
+                        <div className="bg-white/40 rounded-xl p-6">
+                          <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                            <Target className="w-5 h-5 text-primary" />
+                            Tee Options
+                          </h4>
+                          <div className="space-y-2">
+                            {selectedCourse.holes[0].teeBoxes.map((tee, index) => (
+                              <div key={index} className="flex items-center justify-between p-2 bg-white/50 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-3 h-3 rounded-full border" 
+                                    style={{ backgroundColor: tee.color, borderColor: tee.color === '#FFFFFF' ? '#000' : tee.color }}
+                                  />
+                                  <span className="font-medium text-sm">{tee.name}</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {Math.round(tee.rating * 10) / 10}/{tee.slope}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Green Fees */}
+                      {selectedCourse.greenFees && (
+                        <div className="bg-white/40 rounded-xl p-6">
+                          <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                            <div className="w-5 h-5 text-primary">$</div>
+                            Green Fees
+                          </h4>
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center p-2 bg-white/50 rounded-lg">
+                              <span className="text-sm">Weekday</span>
+                              <span className="font-bold text-primary">${selectedCourse.greenFees.weekday}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-2 bg-white/50 rounded-lg">
+                              <span className="text-sm">Weekend</span>
+                              <span className="font-bold text-primary">${selectedCourse.greenFees.weekend}</span>
+                            </div>
+                            {selectedCourse.greenFees.twilight && (
+                              <div className="flex justify-between items-center p-2 bg-white/50 rounded-lg">
+                                <span className="text-sm">Twilight</span>
+                                <span className="font-bold text-accent">${selectedCourse.greenFees.twilight}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Amenities */}
+                      {selectedCourse.amenities && selectedCourse.amenities.length > 0 && (
+                        <div className="bg-white/40 rounded-xl p-6">
+                          <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
+                            <Trophy className="w-5 h-5 text-primary" />
+                            Amenities
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedCourse.amenities.slice(0, 6).map((amenity, index) => (
+                              <Badge key={index} variant="secondary" className="bg-white/60 text-xs">
+                                {amenity}
+                              </Badge>
+                            ))}
+                            {selectedCourse.amenities.length > 6 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{selectedCourse.amenities.length - 6} more
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
+
+                    {/* Contact Information */}
+                    {(selectedCourse.phoneNumber || selectedCourse.website) && (
+                      <div className="bg-white/30 rounded-xl p-4">
+                        <div className="flex flex-wrap gap-4 justify-center text-sm">
+                          {selectedCourse.phoneNumber && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <span>📞</span>
+                              {selectedCourse.phoneNumber}
+                            </div>
+                          )}
+                          {selectedCourse.website && (
+                            <div className="flex items-center gap-2 text-muted-foreground">
+                              <span>🌐</span>
+                              <a href={selectedCourse.website} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                                Visit Website
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
