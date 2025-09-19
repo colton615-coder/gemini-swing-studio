@@ -176,33 +176,14 @@ export function BlueGolfMap({
     markersLayer.current.clearLayers();
 
     // Add tee marker
-    const teeMarker = L.marker([currentHole.teeCoords.lat, currentHole.teeCoords.lng], { 
+    L.marker([currentHole.teeCoords.lat, currentHole.teeCoords.lng], { 
       icon: createTeeIcon() 
     }).addTo(markersLayer.current);
 
-    teeMarker.bindPopup(`
-      <div class="p-3 min-w-32">
-        <div class="font-semibold text-center">Hole ${currentHole.holeNumber}</div>
-        <div class="text-center text-sm text-gray-600">Par ${currentHole.par}</div>
-        <div class="text-center text-sm font-medium">${currentHole.distance} yards</div>
-      </div>
-    `);
-
     // Add green marker
-    const greenMarker = L.marker([currentHole.greenCoords.lat, currentHole.greenCoords.lng], { 
+    L.marker([currentHole.greenCoords.lat, currentHole.greenCoords.lng], { 
       icon: createGreenIcon() 
     }).addTo(markersLayer.current);
-
-    const greenDistance = shots.length > 0 
-      ? calculateDistance(shots[shots.length - 1]?.coordinates || currentHole.teeCoords, currentHole.greenCoords)
-      : currentHole.distance;
-
-    greenMarker.bindPopup(`
-      <div class="p-3 min-w-32">
-        <div class="font-semibold text-center">Green</div>
-        <div class="text-center text-sm font-medium">${greenDistance} yards</div>
-      </div>
-    `);
 
     // Add shot markers
     const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
@@ -226,27 +207,6 @@ export function BlueGolfMap({
       shotMarker.on('click', () => {
         setSelectedShot(selectedShot === shot.id ? null : shot.id);
       });
-
-      const distanceToGreen = calculateDistance(shot.coordinates, currentHole.greenCoords);
-      shotMarker.bindPopup(`
-        <div class="p-3 min-w-32">
-          <div class="flex justify-between items-center mb-2">
-            <span class="font-semibold">Shot ${shot.shotNumber}</span>
-            <button onclick="window.deleteShot?.('${shot.id}')" 
-                    class="text-red-500 hover:text-red-700 text-xs">
-              Delete
-            </button>
-          </div>
-          <div class="space-y-1 text-sm">
-            <div>Club: <strong>${shot.club}</strong></div>
-            <div>Lie: <strong>${shot.lie}</strong></div>
-            <div>To green: <strong>${distanceToGreen} yds</strong></div>
-          </div>
-          <div class="text-xs text-gray-500 mt-2">
-            Drag marker to adjust position
-          </div>
-        </div>
-      `);
     });
 
     updateTrajectory();
