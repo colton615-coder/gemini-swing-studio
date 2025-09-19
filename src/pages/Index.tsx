@@ -204,15 +204,39 @@ const Index = () => {
   const updateShot = (shotId: string, coordinates: { lat: number; lng: number }) => {
     if (!shotTrackingRound) return;
     
-    const updatedShots = shotTrackingRound.shots.map(shot =>
-      shot.id === shotId 
-        ? { 
-            ...shot, 
-            coordinates,
-            distance: calculateDistance(coordinates, getCurrentHoleData()?.greenCoords || { lat: 0, lng: 0 })
+    const currentHoleData = getCurrentHoleData();
+    if (!currentHoleData) return;
+    
+    const updatedShots = shotTrackingRound.shots.map(shot => {
+      if (shot.id === shotId) {
+        // Recalculate distance based on shot type
+        const currentHoleShots = shotTrackingRound.shots.filter(s => s.holeNumber === shot.holeNumber);
+        let distance: number;
+        
+        if (shot.shotNumber === 1) {
+          // First shot: distance from tee
+          distance = calculateDistance(currentHoleData.teeCoords, coordinates);
+        } else {
+          // Subsequent shots: distance from previous shot
+          const previousShot = currentHoleShots.find(s => s.shotNumber === shot.shotNumber - 1);
+          if (previousShot) {
+            distance = calculateDistance(previousShot.coordinates, coordinates);
+          } else {
+            distance = shot.distance; // Keep existing distance if can't calculate
           }
-        : shot
-    );
+        }
+        
+        // Keep distances realistic for golf (max 400 yards)
+        distance = Math.min(distance, 400);
+        
+        return { 
+          ...shot, 
+          coordinates,
+          distance
+        };
+      }
+      return shot;
+    });
     
     setShotTrackingRound({
       ...shotTrackingRound,

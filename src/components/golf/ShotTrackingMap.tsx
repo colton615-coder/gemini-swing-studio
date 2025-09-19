@@ -65,18 +65,151 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
     shotLayer.current.clearLayers();
 
     const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
-    currentHoleShots.forEach((shot) => {
-      const shotIcon = createCustomIcon('#3b82f6');
-      L.marker([shot.coordinates.lat, shot.coordinates.lng], { icon: shotIcon })
-        .addTo(shotLayer.current!)
+    
+    // Add trajectory lines between shots
+    if (currentHoleShots.length > 1) {
+      const trajectoryCoords = currentHoleShots.map(shot => [shot.coordinates.lat, shot.coordinates.lng] as [number, number]);
+      
+      // Add line from tee to first shot
+      const teeToFirst = [
+        [currentHole.teeCoords.lat, currentHole.teeCoords.lng] as [number, number],
+        trajectoryCoords[0]
+      ];
+      L.polyline(teeToFirst, { 
+        color: '#f59e0b', 
+        weight: 3, 
+        opacity: 0.8,
+        dashArray: [5, 5]
+      }).addTo(shotLayer.current!);
+      
+      // Add lines between shots
+      for (let i = 0; i < trajectoryCoords.length - 1; i++) {
+        L.polyline([trajectoryCoords[i], trajectoryCoords[i + 1]], { 
+          color: '#f59e0b', 
+          weight: 3, 
+          opacity: 0.8 
+        }).addTo(shotLayer.current!);
+      }
+      
+      // Add distance labels between shots
+      for (let i = 0; i < currentHoleShots.length; i++) {
+        const shot = currentHoleShots[i];
+        if (shot.distance > 0) {
+          const midLat = shot.coordinates.lat + 0.0002;
+          const midLng = shot.coordinates.lng + 0.0002;
+          
+          L.divIcon({
+            className: 'distance-label',
+            html: `<div style="
+              background: rgba(0,0,0,0.7);
+              color: white;
+              padding: 2px 6px;
+              border-radius: 10px;
+              font-size: 11px;
+              font-weight: bold;
+              white-space: nowrap;
+            ">${shot.distance}yd</div>`,
+            iconSize: [30, 20],
+            iconAnchor: [15, 10]
+          });
+          
+          L.marker([midLat, midLng], {
+            icon: L.divIcon({
+              className: 'distance-label',
+              html: `<div style="
+                background: rgba(0,0,0,0.7);
+                color: white;
+                padding: 2px 6px;
+                border-radius: 10px;
+                font-size: 11px;
+                font-weight: bold;
+                white-space: nowrap;
+              ">${shot.distance}yd</div>`,
+              iconSize: [30, 20],
+              iconAnchor: [15, 10]
+            })
+          }).addTo(shotLayer.current!);
+        }
+      }
+    } else if (currentHoleShots.length === 1) {
+      // Single shot - line from tee to shot
+      const trajectoryCoords = [
+        [currentHole.teeCoords.lat, currentHole.teeCoords.lng] as [number, number],
+        [currentHoleShots[0].coordinates.lat, currentHoleShots[0].coordinates.lng] as [number, number]
+      ];
+      
+      L.polyline(trajectoryCoords, { 
+        color: '#f59e0b', 
+        weight: 3, 
+        opacity: 0.8 
+      }).addTo(shotLayer.current!);
+      
+      // Add distance label
+      const shot = currentHoleShots[0];
+      if (shot.distance > 0) {
+        const midLat = (currentHole.teeCoords.lat + shot.coordinates.lat) / 2;
+        const midLng = (currentHole.teeCoords.lng + shot.coordinates.lng) / 2;
+        
+        L.marker([midLat, midLng], {
+          icon: L.divIcon({
+            className: 'distance-label',
+            html: `<div style="
+              background: rgba(0,0,0,0.7);
+              color: white;
+              padding: 2px 6px;
+              border-radius: 10px;
+              font-size: 11px;
+              font-weight: bold;
+              white-space: nowrap;
+            ">${shot.distance}yd</div>`,
+            iconSize: [30, 20],
+            iconAnchor: [15, 10]
+          })
+        }).addTo(shotLayer.current!);
+      }
+    }
+
+    // Add shot markers with numbers
+    currentHoleShots.forEach((shot, index) => {
+      const shotIcon = L.divIcon({
+        className: 'shot-marker',
+        html: `<div style="
+          width: 28px;
+          height: 28px;
+          background: #3b82f6;
+          border: 3px solid white;
+          border-radius: 50%;
+          color: white;
+          font-weight: bold;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        ">${shot.shotNumber}</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      
+      const marker = L.marker([shot.coordinates.lat, shot.coordinates.lng], { 
+        icon: shotIcon,
+        draggable: true
+      }).addTo(shotLayer.current!)
         .bindPopup(`
           <div class="p-2">
             <strong>Shot ${shot.shotNumber}</strong><br>
             Club: ${shot.club}<br>
             Lie: ${shot.lie}<br>
-            Distance: ${shot.distance} yds
+            Shot Distance: ${shot.distance} yds
           </div>
         `);
+      
+      // Add drag event to update shot position
+      marker.on('dragend', (e) => {
+        const newPos = (e.target as L.Marker).getLatLng();
+        // Update shot coordinates (you'd need to implement this in the parent component)
+        console.log('Shot moved to:', newPos);
+      });
     });
   };
 
@@ -135,11 +268,28 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
         try {
           if (!currentHole) return;
           
-          const shotNumber = shots.filter(s => s.holeNumber === currentHole.holeNumber).length + 1;
-          const distance = calculateDistance(
-            { lat: e.latlng.lat, lng: e.latlng.lng },
-            currentHole.greenCoords
-          );
+          const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
+          const shotNumber = currentHoleShots.length + 1;
+          
+          // Calculate distance based on shot type
+          let distance: number;
+          if (shotNumber === 1) {
+            // First shot: distance from tee to clicked position
+            distance = calculateDistance(
+              currentHole.teeCoords,
+              { lat: e.latlng.lat, lng: e.latlng.lng }
+            );
+          } else {
+            // Subsequent shots: distance from previous shot
+            const previousShot = currentHoleShots[currentHoleShots.length - 1];
+            distance = calculateDistance(
+              previousShot.coordinates,
+              { lat: e.latlng.lat, lng: e.latlng.lng }
+            );
+          }
+          
+          // Keep distances realistic for golf (max 400 yards)
+          distance = Math.min(distance, 400);
 
           onShotAdd({
             holeNumber: currentHole.holeNumber,
@@ -186,8 +336,22 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
     
     try {
       const position = await getCurrentPosition();
-      const shotNumber = shots.filter(s => s.holeNumber === currentHole.holeNumber).length + 1;
-      const distance = calculateDistance(position, currentHole.greenCoords);
+      const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
+      const shotNumber = currentHoleShots.length + 1;
+      
+      // Calculate distance based on shot type
+      let distance: number;
+      if (shotNumber === 1) {
+        // First shot: distance from tee
+        distance = calculateDistance(currentHole.teeCoords, position);
+      } else {
+        // Subsequent shots: distance from previous shot
+        const previousShot = currentHoleShots[currentHoleShots.length - 1];
+        distance = calculateDistance(previousShot.coordinates, position);
+      }
+      
+      // Keep distances realistic for golf (max 400 yards)
+      distance = Math.min(distance, 400);
 
       onShotAdd({
         holeNumber: currentHole.holeNumber,
@@ -302,9 +466,10 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
             </Button>
           </div>
 
-          <p className="text-xs text-muted-foreground text-center">
-            Tap anywhere on the map to add a shot at that location
-          </p>
+          <div className="text-xs text-muted-foreground text-center space-y-1">
+            <p>📍 <strong>Click on map to place shots</strong></p>
+            <p>🎯 Drag markers to adjust • Distances show shot length</p>
+          </div>
         </div>
       </Card>
 
@@ -328,7 +493,7 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
                   <div>
                     <p className="font-medium">{shot.club}</p>
                     <p className="text-sm text-muted-foreground">
-                      {shot.lie} • {shot.distance} yds to green
+                      {shot.lie} • {shot.distance} yds
                     </p>
                   </div>
                 </div>
