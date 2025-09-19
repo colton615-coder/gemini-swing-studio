@@ -22,8 +22,7 @@ interface ShotTrackingMapProps {
 export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }: ShotTrackingMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [mapboxToken, setMapboxToken] = useState<string>('');
-  const [isTokenSaved, setIsTokenSaved] = useState(false);
+  const mapboxToken = 'pk.eyJ1IjoiY29sdG9uNjE1IiwiYSI6ImNtZTkyd3ZjbzBmeXAycXFhdXMwYW1hZ28ifQ.s_B7gcqGC9aoAdV418nsOg';
   const [newShotClub, setNewShotClub] = useState<string>('Driver');
   const [newShotLie, setNewShotLie] = useState<'fairway' | 'rough' | 'sand' | 'green' | 'tee'>('tee');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -36,7 +35,7 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
   ];
 
   const initializeMap = () => {
-    if (!mapContainer.current || !mapboxToken || !currentHole) return;
+    if (!mapContainer.current || !currentHole) return;
 
     mapboxgl.accessToken = mapboxToken;
     
@@ -146,33 +145,8 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
     }
   };
 
-  const saveToken = () => {
-    if (mapboxToken.startsWith('pk.')) {
-      setIsTokenSaved(true);
-      localStorage.setItem('mapbox_token', mapboxToken);
-      toast({
-        title: "Token Saved",
-        description: "Mapbox token saved successfully"
-      });
-    } else {
-      toast({
-        title: "Invalid Token",
-        description: "Please enter a valid Mapbox public token (starts with pk.)",
-        variant: "destructive"
-      });
-    }
-  };
-
   useEffect(() => {
-    const savedToken = localStorage.getItem('mapbox_token');
-    if (savedToken) {
-      setMapboxToken(savedToken);
-      setIsTokenSaved(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isTokenSaved && mapboxToken && currentHole) {
+    if (currentHole) {
       // Clean up existing map
       if (map.current) {
         map.current.remove();
@@ -185,35 +159,7 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
         map.current.remove();
       }
     };
-  }, [isTokenSaved, mapboxToken, currentHole, shots]);
-
-  if (!isTokenSaved) {
-    return (
-      <Card className="p-6">
-        <div className="text-center space-y-4">
-          <MapPin className="w-12 h-12 mx-auto text-primary" />
-          <h3 className="text-lg font-semibold">Setup Interactive Map</h3>
-          <p className="text-muted-foreground">
-            Enter your Mapbox public token to enable shot tracking with interactive maps.
-          </p>
-          <div className="space-y-2">
-            <Input
-              type="text"
-              placeholder="pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEi..."
-              value={mapboxToken}
-              onChange={(e) => setMapboxToken(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Get your free token at <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a>
-            </p>
-            <Button onClick={saveToken} disabled={!mapboxToken}>
-              Save Token
-            </Button>
-          </div>
-        </div>
-      </Card>
-    );
-  }
+  }, [currentHole, shots]);
 
   const currentHoleShots = shots.filter(s => currentHole && s.holeNumber === currentHole.holeNumber);
 
