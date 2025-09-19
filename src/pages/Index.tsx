@@ -9,6 +9,7 @@ import { Play, BarChart3, Trophy, MapPin, Navigation, Download, Target, Search, 
 import { ScoreCard } from "@/components/golf/ScoreCard";
 import { GPS } from "@/components/golf/GPS";
 import { ShotTrackingMap } from "@/components/golf/ShotTrackingMap";
+import { BlueGolfMap } from "@/components/golf/BlueGolfMap";
 import { CourseDownloader } from "@/components/golf/CourseDownloader";
 import { WeatherWidget } from "@/components/golf/WeatherWidget";
 import { PhotoAttachment } from "@/components/golf/PhotoAttachment";
@@ -17,6 +18,7 @@ import { enhancedNYCourses } from "@/data/enhanced-ny-courses";
 import { Course, ScoreEntry, Round } from "@/types/golf";
 import { Shot, ShotTrackingRound } from "@/types/shot";
 import { OfflineService } from "@/services/offline";
+import { calculateDistance } from "@/utils/gps";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -149,6 +151,25 @@ const Index = () => {
     setShotTrackingRound({
       ...shotTrackingRound,
       shots: shotTrackingRound.shots.filter(shot => shot.id !== shotId)
+    });
+  };
+
+  const updateShot = (shotId: string, coordinates: { lat: number; lng: number }) => {
+    if (!shotTrackingRound) return;
+    
+    const updatedShots = shotTrackingRound.shots.map(shot =>
+      shot.id === shotId 
+        ? { 
+            ...shot, 
+            coordinates,
+            distance: calculateDistance(coordinates, getCurrentHoleData()?.greenCoords || { lat: 0, lng: 0 })
+          }
+        : shot
+    );
+    
+    setShotTrackingRound({
+      ...shotTrackingRound,
+      shots: updatedShots
     });
   };
 
@@ -712,10 +733,11 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="shots">
-            <ShotTrackingMap
+            <BlueGolfMap
               currentHole={getCurrentHoleData()}
               shots={shotTrackingRound?.shots || []}
               onShotAdd={addShot}
+              onShotUpdate={updateShot}
               onShotDelete={deleteShot}
             />
           </TabsContent>
