@@ -14,7 +14,7 @@ import { CourseDownloader } from "@/components/golf/CourseDownloader";
 import { WeatherWidget } from "@/components/golf/WeatherWidget";
 import { PhotoAttachment } from "@/components/golf/PhotoAttachment";
 import { OfflineIndicator } from "@/components/golf/OfflineIndicator";
-import { enhancedNYCourses } from "@/data/enhanced-ny-courses";
+import { comprehensiveNYCourses } from "@/data/comprehensive-ny-courses";
 import { Course, ScoreEntry, Round } from "@/types/golf";
 import { Shot, ShotTrackingRound } from "@/types/shot";
 import { OfflineService } from "@/services/offline";
@@ -22,7 +22,7 @@ import { calculateDistance } from "@/utils/gps";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [selectedCourse, setSelectedCourse] = useState<Course>(enhancedNYCourses[0]);
+  const [selectedCourse, setSelectedCourse] = useState<Course>(comprehensiveNYCourses[0]);
   const [currentRound, setCurrentRound] = useState<Round | null>(null);
   const [currentHole, setCurrentHole] = useState(1);
   const [shotTrackingRound, setShotTrackingRound] = useState<ShotTrackingRound | null>(null);
@@ -42,7 +42,7 @@ const Index = () => {
     
     // Initialize offline service
     OfflineService.initialize();
-    OfflineService.saveCourses(enhancedNYCourses); // Cache courses offline
+    OfflineService.saveCourses(comprehensiveNYCourses); // Cache courses offline
   }, []);
 
   // Save rounds to localStorage
@@ -52,7 +52,7 @@ const Index = () => {
   };
 
   // Filter courses based on search and location
-  const filteredCourses = enhancedNYCourses.filter(course => {
+  const filteredCourses = comprehensiveNYCourses.filter(course => {
     const matchesSearch = course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          course.location.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -62,46 +62,44 @@ const Index = () => {
       const location = course.location.toLowerCase();
       switch (locationFilter) {
         case 'nyc':
-          matchesLocation = location.includes('manhattan') || location.includes('brooklyn') || 
-                           location.includes('queens') || location.includes('bronx') || 
+          matchesLocation = location.includes('bronx') || location.includes('brooklyn') || 
+                           location.includes('queens') || location.includes('manhattan') || 
                            location.includes('staten island');
           break;
         case 'longisland':
           matchesLocation = location.includes('farmingdale') || location.includes('babylon') ||
-                           location.includes('coram') || location.includes('west babylon') ||
-                           location.includes('nassau') || location.includes('suffolk') ||
-                           location.includes('montauk') || location.includes('kings park') ||
-                           location.includes('wantagh') || location.includes('east rockaway') ||
-                           location.includes('hicksville') || location.includes('roslyn') ||
+                           location.includes('coram') || location.includes('montauk') ||
                            location.includes('east meadow') || location.includes('glen cove') ||
-                           location.includes('port washington') || location.includes('lido beach') ||
-                           location.includes('merrick') || location.includes('valley stream') ||
-                           location.includes('sag harbor') || location.includes('middle island') ||
-                           location.includes('great river') || location.includes('west sayville') ||
+                           location.includes('port washington') || location.includes('lido') ||
                            location.includes('smithtown') || location.includes('southampton') ||
-                           location.includes('bay shore') || location.includes('manorville');
+                           location.includes('riverhead') || location.includes('greenport') ||
+                           location.includes('middle island') || location.includes('manorville') ||
+                           location.includes('great river') || location.includes('west sayville') ||
+                           location.includes('kings park') || location.includes('northport') ||
+                           location.includes('holbrook') || location.includes('brentwood') ||
+                           location.includes('west babylon') || location.includes('bay shore');
           break;
         case 'westchester':
           matchesLocation = location.includes('yonkers') || location.includes('ossining') ||
-                           location.includes('white plains') || location.includes('yorktown heights') ||
+                           location.includes('white plains') || location.includes('yorktown') ||
                            location.includes('scarsdale') || location.includes('pleasant valley') ||
-                           location.includes('congers') || location.includes('staatsburg');
+                           location.includes('congers') || location.includes('mamaroneck') ||
+                           location.includes('rye') || location.includes('scarborough');
           break;
         case 'upstate':
-          matchesLocation = location.includes('saratoga springs') || location.includes('amsterdam') ||
+          matchesLocation = location.includes('saratoga') || location.includes('amsterdam') ||
                            location.includes('colonie') || location.includes('schenectady') ||
-                           location.includes('troy') || location.includes('ballston spa') ||
-                           location.includes('ogdensburg') || location.includes('fineview');
+                           location.includes('troy') || location.includes('ballston spa');
           break;
         case 'central':
           matchesLocation = location.includes('fayetteville') || location.includes('sterling') ||
-                           location.includes('horseheads') || location.includes('chenango forks') ||
+                           location.includes('horseheads') || location.includes('chenango') ||
                            location.includes('akron') || location.includes('syracuse') ||
                            location.includes('skaneateles') || location.includes('verona');
           break;
         case 'western':
           matchesLocation = location.includes('painted post') || location.includes('buffalo') ||
-                           location.includes('niagara falls') || location.includes('lockport') ||
+                           location.includes('niagara') || location.includes('lockport') ||
                            location.includes('east aurora') || location.includes('batavia') ||
                            location.includes('rochester');
           break;
@@ -112,7 +110,7 @@ const Index = () => {
   });
 
   // Get unique locations for filter
-  const locations = ['all', ...Array.from(new Set(enhancedNYCourses.map(course => {
+  const locations = ['all', ...Array.from(new Set(comprehensiveNYCourses.map(course => {
     const parts = course.location.split(', ');
     return parts[parts.length - 1]; // Get the state/region part
   })))];
@@ -277,7 +275,7 @@ const Index = () => {
 
   const loadPastRound = (round: Round) => {
     setCurrentRound(round);
-    const course = enhancedNYCourses.find(c => c.name === round.courseId) || enhancedNYCourses[0];
+    const course = comprehensiveNYCourses.find(c => c.name === round.courseId) || comprehensiveNYCourses[0];
     setSelectedCourse(course);
     setActiveView('play');
     
@@ -316,7 +314,7 @@ const Index = () => {
               Choose Your<br />Perfect Course
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Select from {enhancedNYCourses.length} premier New York public golf courses and start your professional golf experience
+              Select from {comprehensiveNYCourses.length} premier New York public golf courses and start your professional golf experience
             </p>
           </div>
 
@@ -350,13 +348,13 @@ const Index = () => {
                       <span className="text-sm font-medium">Filter by region:</span>
                     </div>
                     <Select value={locationFilter} onValueChange={setLocationFilter}>
-                      <SelectTrigger className="w-48">
+                      <SelectTrigger className="w-48 bg-background border-2 hover:border-primary/50">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border-2 shadow-lg z-50">
                         <SelectItem value="all">All Regions</SelectItem>
                         <SelectItem value="nyc">NYC</SelectItem>
-                        <SelectItem value="long island">Long Island</SelectItem>
+                        <SelectItem value="longisland">Long Island</SelectItem>
                         <SelectItem value="westchester">Westchester</SelectItem>
                         <SelectItem value="upstate">Upstate</SelectItem>
                         <SelectItem value="western">Western NY</SelectItem>
@@ -367,7 +365,7 @@ const Index = () => {
                   
                   <div className="text-center">
                     <Badge variant="outline" className="text-sm">
-                      {filteredCourses.length} of {enhancedNYCourses.length} courses found
+                      {filteredCourses.length} of {comprehensiveNYCourses.length} courses found
                     </Badge>
                   </div>
                 </div>
@@ -377,14 +375,14 @@ const Index = () => {
                   <Select
                     value={selectedCourse.name}
                     onValueChange={(value) => {
-                      const course = enhancedNYCourses.find(c => c.name === value);
+                      const course = comprehensiveNYCourses.find(c => c.name === value);
                       if (course) setSelectedCourse(course);
                     }}
                   >
-                    <SelectTrigger className="h-14 text-lg border-2 hover:border-primary/50 transition-colors">
+                    <SelectTrigger className="h-14 text-lg border-2 hover:border-primary/50 transition-colors bg-background">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="max-h-80">
+                    <SelectContent className="max-h-80 bg-background border-2 shadow-lg z-50">
                       {Object.entries(groupedCourses).map(([region, regionCourses]) => (
                         <div key={region}>
                           <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">
