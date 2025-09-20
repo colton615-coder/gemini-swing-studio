@@ -429,5 +429,10 @@ export const comprehensiveNYCourses: Course[] = [
     name: "Buffalo Golf Club",
     location: "Buffalo, NY",
     holes: generateHoles(18, 71, 'western')
+  },
+  {
+    name: "Rolling Oaks Golf Course",
+    location: "Buffalo, NY",
+    holes: generateHoles(18, 72, 'western')
   }
 ];
