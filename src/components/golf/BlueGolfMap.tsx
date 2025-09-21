@@ -385,8 +385,8 @@ export function BlueGolfMap({
       </Card>
 
       {/* BlueGolf Style Map */}
-      <Card className="overflow-hidden bg-black">
-        <div ref={mapContainer} className="h-[500px] w-full" />
+      <Card className="overflow-hidden bg-black relative z-0">
+        <div ref={mapContainer} className="h-[500px] w-full relative z-0" />
         
       {/* Map Controls */}
         <div className="p-3 bg-background border-t">
@@ -480,7 +480,7 @@ export function BlueGolfMap({
 
       {/* Edit Shot Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="z-[9999]">
           <DialogHeader>
             <DialogTitle>Edit Shot {editingShot?.shotNumber}</DialogTitle>
           </DialogHeader>
