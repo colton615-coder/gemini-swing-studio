@@ -16,6 +16,7 @@ import { PhotoAttachment } from "@/components/golf/PhotoAttachment";
 import { OfflineIndicator } from "@/components/golf/OfflineIndicator";
 import { GoogleMapsGolfView } from "@/components/golf/GoogleMapsGolfView";
 import { EnhancedGoogleMapsView } from "@/components/golf/EnhancedGoogleMapsView";
+import { ApiKeySettings } from "@/components/golf/ApiKeySettings";
 import { comprehensiveNYCourses } from "@/data/comprehensive-ny-courses";
 import { Course, ScoreEntry, Round } from "@/types/golf";
 import { Shot, ShotTrackingRound } from "@/types/shot";
@@ -756,12 +757,13 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scorecard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
             <TabsTrigger value="gps">GPS</TabsTrigger>
             <TabsTrigger value="shots">Shot Tracking</TabsTrigger>
             <TabsTrigger value="google-maps">Google Maps</TabsTrigger>
             <TabsTrigger value="extras">Extras</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="scorecard" className="space-y-4">
@@ -851,6 +853,10 @@ const Index = () => {
                 holeNumber={currentHole}
               />
             </div>
+          </TabsContent>
+
+          <TabsContent value="settings">
+            <ApiKeySettings />
           </TabsContent>
         </Tabs>
       </div>

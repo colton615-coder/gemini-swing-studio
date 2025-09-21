@@ -90,12 +90,20 @@ export function GoogleMapsGolfView({
 
     const initializeMap = async () => {
       try {
-        // Note: For demo - replace with actual Google Maps API key
-        // You can get one at: https://developers.google.com/maps/documentation/javascript/get-api-key
-        const DEMO_API_KEY = "AIzaSyBFw0Qby..."; // Replace with real key
+        // Get API key from localStorage
+        const apiKey = localStorage.getItem('google-maps-api-key');
+        
+        if (!apiKey) {
+          toast({
+            title: "Google Maps API Key Required",
+            description: "Please configure your API key in Settings",
+            variant: "destructive"
+          });
+          return;
+        }
         
         const loader = new Loader({
-          apiKey: DEMO_API_KEY,
+          apiKey: apiKey,
           version: "weekly",
           libraries: ["places"]
         });
