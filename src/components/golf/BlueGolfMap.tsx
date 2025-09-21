@@ -51,6 +51,11 @@ export function BlueGolfMap({
   const [customTeeLocation, setCustomTeeLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { toast } = useToast();
   const [mapPulse, setMapPulse] = useState(false);
+  // Keep latest shots to avoid stale closure inside Leaflet event handlers
+  const latestShotsRef = useRef<Shot[]>(shots);
+  useEffect(() => {
+    latestShotsRef.current = shots;
+  }, [shots]);
 
   const clubs = ['Driver', '3-Wood', '5-Wood', '3-Iron', '4-Iron', '5-Iron', '6-Iron', '7-Iron', '8-Iron', '9-Iron', 'PW', 'SW', 'Putter'];
   const lies = ['tee', 'fairway', 'rough', 'sand', 'green'] as const;
@@ -291,7 +296,7 @@ export function BlueGolfMap({
     map.current.on('click', (e: L.LeafletMouseEvent) => {
       if (!currentHole) return;
 
-      const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
+      const currentHoleShots = latestShotsRef.current.filter(s => s.holeNumber === currentHole.holeNumber);
       const shotNumber = currentHoleShots.length + 1;
       
       // Calculate distance from previous shot or tee
