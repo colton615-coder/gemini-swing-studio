@@ -234,15 +234,16 @@ export function BlueGolfMap({
 
     mapContainer.current.innerHTML = '';
 
-    // Create map with satellite view (BlueGolf style)
+    // Create map with 2D flat view
     map.current = L.map(mapContainer.current, {
       zoomControl: false,
       attributionControl: false
     }).setView([currentHole.teeCoords.lat, currentHole.teeCoords.lng], 17);
 
-    // Add satellite tiles
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 20
+    // Add flat 2D tiles (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map.current);
 
     // Add zoom control in bottom right

@@ -89,28 +89,24 @@ export function EnhancedShotTrackingMap({
       16
     );
 
-    // Add tile layers
-    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: '&copy; Esri &copy; OpenStreetMap contributors',
-      maxZoom: 19
-    });
-
+    // Add flat 2D tile layer (default to street map for 2D look)
     const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
       maxZoom: 19
     });
 
-    // Add default layer
-    if (showSatellite) {
-      satelliteLayer.addTo(map.current);
-    } else {
-      streetLayer.addTo(map.current);
-    }
+    const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      maxZoom: 19
+    });
 
-    // Layer control
+    // Add default layer (always use flat 2D)
+    streetLayer.addTo(map.current);
+
+    // Layer control for different 2D styles
     const baseMaps = {
-      "Satellite": satelliteLayer,
-      "Street": streetLayer
+      "Street Map": streetLayer,
+      "Light Theme": cartoLayer
     };
     L.control.layers(baseMaps).addTo(map.current);
 
@@ -346,10 +342,10 @@ export function EnhancedShotTrackingMap({
                     <Switch checked={showTrajectories} onCheckedChange={setShowTrajectories} />
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Satellite View</label>
-                    <Switch checked={showSatellite} onCheckedChange={setShowSatellite} />
-                  </div>
+                   <div className="flex items-center justify-between">
+                     <label className="text-sm font-medium">Light Theme</label>
+                     <Switch checked={showSatellite} onCheckedChange={setShowSatellite} />
+                   </div>
                 </div>
 
                 <div className="space-y-3">
