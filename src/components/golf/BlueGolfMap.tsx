@@ -50,6 +50,7 @@ export function BlueGolfMap({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [customTeeLocation, setCustomTeeLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { toast } = useToast();
+  const [mapPulse, setMapPulse] = useState(false);
 
   const clubs = ['Driver', '3-Wood', '5-Wood', '3-Iron', '4-Iron', '5-Iron', '6-Iron', '7-Iron', '8-Iron', '9-Iron', 'PW', 'SW', 'Putter'];
   const lies = ['tee', 'fairway', 'rough', 'sand', 'green'] as const;
@@ -402,6 +403,9 @@ export function BlueGolfMap({
       <div className="relative h-[600px] w-full overflow-hidden rounded-lg bg-black">
         {/* Map Container */}
         <div ref={mapContainer} className="h-full w-full relative z-0" />
+        {mapPulse && (
+          <div className="pointer-events-none absolute inset-0 z-[5] ring-4 ring-primary/60 rounded-lg animate-pulse" />
+        )}
         
         {/* Header Overlay */}
         <div className="absolute top-0 left-0 right-0 z-10 bg-black/70 backdrop-blur-sm">
@@ -482,7 +486,11 @@ export function BlueGolfMap({
           <Button 
             className="bg-black/70 hover:bg-black/80 text-white border border-white/30 rounded-full px-6 py-2 backdrop-blur-sm"
             onClick={() => {
-              alert('Tap anywhere on the map to add a shot at that location!');
+              const nextNumber = (currentHoleShots?.length || 0) + 1;
+              toast({ title: `Tracking Shot ${nextNumber}`, description: 'Tap anywhere on the map to place it' });
+              setMapPulse(true);
+              setTimeout(() => setMapPulse(false), 1500);
+              mapContainer.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }}
           >
             <Target className="w-4 h-4 mr-2" />
