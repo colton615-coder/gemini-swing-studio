@@ -757,13 +757,13 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scorecard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
-            <TabsTrigger value="gps">GPS</TabsTrigger>
-            <TabsTrigger value="shots">Shot Tracking</TabsTrigger>
-            <TabsTrigger value="google-maps">Google Maps</TabsTrigger>
-            <TabsTrigger value="extras">Extras</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6 bg-background/95 backdrop-blur-sm border-2 sticky top-4 z-40 shadow-lg">
+            <TabsTrigger value="scorecard" className="text-xs sm:text-sm font-medium">Scorecard</TabsTrigger>
+            <TabsTrigger value="gps" className="text-xs sm:text-sm font-medium">GPS Shot Tracking</TabsTrigger>
+            <TabsTrigger value="shots" className="text-xs sm:text-sm font-medium">Blue Maps</TabsTrigger>
+            <TabsTrigger value="google-maps" className="text-xs sm:text-sm font-medium">Google Maps</TabsTrigger>
+            <TabsTrigger value="extras" className="text-xs sm:text-sm font-medium">Extras</TabsTrigger>
+            <TabsTrigger value="settings" className="text-xs sm:text-sm font-medium">Settings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="scorecard" className="space-y-4">
