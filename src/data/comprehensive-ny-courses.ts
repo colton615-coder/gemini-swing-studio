@@ -433,6 +433,6 @@ export const comprehensiveNYCourses: Course[] = [
   {
     name: "Rolling Oaks Golf Course",
     location: "Rocky Point, NY",
-    holes: generateHoles(18, 72, 'western')
+    holes: generateHoles(18, 72, 'longisland')
   }
 ];
