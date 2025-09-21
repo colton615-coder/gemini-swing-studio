@@ -99,14 +99,14 @@ export function BlueGolfMap({
       html: `<div style="
         width: 20px;
         height: 20px;
-        background: ${isSelected ? '#f59e0b' : '#3b82f6'};
-        border: 2px solid white;
+        background: ${isSelected ? '#ef4444' : '#ffffff'};
+        border: 3px solid ${isSelected ? '#ffffff' : '#000000'};
         border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 3px 8px rgba(0,0,0,0.4);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: ${isSelected ? '#ffffff' : '#000000'};
         font-weight: bold;
         font-size: 10px;
         cursor: move;
@@ -163,14 +163,16 @@ export function BlueGolfMap({
         icon: L.divIcon({
           className: 'distance-label',
           html: `<div style="
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             color: white;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 50%;
+            font-size: 16px;
             font-weight: bold;
             white-space: nowrap;
-            border: 2px solid white;
+            min-width: 60px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
           ">${distance}</div>`,
           iconSize: [0, 0],
           iconAnchor: [0, 0]
@@ -234,16 +236,16 @@ export function BlueGolfMap({
 
     mapContainer.current.innerHTML = '';
 
-    // Create map with 2D flat view
+    // Create map with satellite view
     map.current = L.map(mapContainer.current, {
       zoomControl: false,
       attributionControl: false
-    }).setView([currentHole.teeCoords.lat, currentHole.teeCoords.lng], 17);
+    }).setView([currentHole.teeCoords.lat, currentHole.teeCoords.lng], 18);
 
-    // Add flat 2D tiles (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
+    // Add satellite imagery (Google Satellite)
+    L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      attribution: '© Google'
     }).addTo(map.current);
 
     // Add zoom control in bottom right
@@ -362,77 +364,90 @@ export function BlueGolfMap({
   };
   
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h3 className="font-semibold">Interactive Shot Tracking</h3>
-              <p className="text-sm text-muted-foreground">
-                Click on map to place shots • Drag markers to adjust
-              </p>
-            </div>
-          </div>
-          <Badge variant="secondary" className="flex items-center gap-1">
-            <MapPin className="w-3 h-3" />
-            {currentHoleShots.length} shots
-          </Badge>
-        </div>
-      </Card>
-
-      {/* BlueGolf Style Map */}
-      <Card className="overflow-hidden bg-black relative z-0">
-        <div ref={mapContainer} className="h-[500px] w-full relative z-0" />
+    <div className="relative">
+      {/* Professional Golf Map */}
+      <div className="relative h-[600px] w-full overflow-hidden rounded-lg bg-black">
+        {/* Map Container */}
+        <div ref={mapContainer} className="h-full w-full relative z-0" />
         
-      {/* Map Controls */}
-        <div className="p-3 bg-background border-t">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-500 rounded-full border border-white"></div>
-                <span>Tee</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-red-500 rounded-full border border-white"></div>
-                <span>Green</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-blue-500 rounded-full border border-white"></div>
-                <span>Shots</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-6 h-0.5 bg-yellow-400"></div>
-                <span>Path</span>
+        {/* Header Overlay */}
+        <div className="absolute top-0 left-0 right-0 z-10 bg-black/70 backdrop-blur-sm">
+          <div className="flex items-center justify-between p-4 text-white">
+            <div className="flex items-center gap-4">
+              <div className="text-4xl font-bold">{currentHole?.holeNumber}</div>
+              <div className="text-sm">
+                <div className="flex items-center gap-2 text-gray-300 mb-1">
+                  <span>Mid Green</span>
+                  <span>Par</span>
+                  <span>{currentHole?.teeBoxes?.[0]?.name || 'White'}</span>
+                  <span>Handicap</span>
+                </div>
+                <div className="flex items-center gap-2 font-semibold text-lg">
+                  <span>{currentHole?.distance || currentHole?.teeBoxes?.[0]?.yardage || 'N/A'}</span>
+                  <span className="text-sm text-gray-300">Yds</span>
+                  <span>{currentHole?.par}</span>
+                  <span>{currentHole?.distance || currentHole?.teeBoxes?.[0]?.yardage || 'N/A'}</span>
+                  <span>{currentHole?.handicap || 'N/A'}</span>
+                </div>
               </div>
             </div>
-            
-            {selectedShotData && (
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEditShot(selectedShotData)}
-                >
-                  <Edit2 className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => handleDeleteShot(selectedShot!)}
-                >
-                  <Trash2 className="w-3 h-3 mr-1" />
-                  Delete
-                </Button>
-              </div>
-            )}
+            <div className="text-xs text-gray-300">
+              {currentHoleShots.length} shots
+            </div>
           </div>
         </div>
-      </Card>
+
+        {/* Bottom Navigation */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/80 backdrop-blur-sm p-4">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+              <span className="text-xs">Scorecard</span>
+            </Button>
+            
+            <div className="flex-1 mx-4">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3">
+                <span className="text-lg font-semibold">Hole {currentHole?.holeNumber}</span>
+                <span className="text-sm ml-2">Enter Score</span>
+              </Button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedShotData && (
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-white hover:bg-white/20"
+                    onClick={() => handleEditShot(selectedShotData)}
+                  >
+                    <Edit2 className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-red-400 hover:bg-red-400/20"
+                    onClick={() => handleDeleteShot(selectedShot!)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </>
+              )}
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+                <span className="text-xs">Tools</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Track Shot Button */}
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10">
+          <Button className="bg-black/70 hover:bg-black/80 text-white border border-white/30 rounded-full px-6 py-2 backdrop-blur-sm">
+            <Target className="w-4 h-4 mr-2" />
+            Track Shot
+          </Button>
+        </div>
+      </div>
 
       {/* Shot Summary */}
       {currentHoleShots.length > 0 && (
