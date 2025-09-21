@@ -757,14 +757,16 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scorecard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6 bg-background/95 backdrop-blur-sm border-2 sticky top-4 z-40 shadow-lg">
-            <TabsTrigger value="scorecard" className="text-xs sm:text-sm font-medium">Scorecard</TabsTrigger>
-            <TabsTrigger value="gps" className="text-xs sm:text-sm font-medium">GPS Shot Tracking</TabsTrigger>
-            <TabsTrigger value="shots" className="text-xs sm:text-sm font-medium">Blue Maps</TabsTrigger>
-            <TabsTrigger value="google-maps" className="text-xs sm:text-sm font-medium">Google Maps</TabsTrigger>
-            <TabsTrigger value="extras" className="text-xs sm:text-sm font-medium">Extras</TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs sm:text-sm font-medium">Settings</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto">
+            <TabsList className="w-full min-w-fit flex bg-background/95 backdrop-blur-sm border-2 sticky top-4 z-40 shadow-lg gap-1">
+              <TabsTrigger value="scorecard" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Scorecard</TabsTrigger>
+              <TabsTrigger value="gps" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">GPS Shot</TabsTrigger>
+              <TabsTrigger value="shots" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Blue Maps</TabsTrigger>
+              <TabsTrigger value="google-maps" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Google</TabsTrigger>
+              <TabsTrigger value="extras" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Extras</TabsTrigger>
+              <TabsTrigger value="settings" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Settings</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="scorecard" className="space-y-4">
             {/* Hole Navigation */}
