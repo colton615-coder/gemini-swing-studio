@@ -12,11 +12,11 @@ const generateNYCoordinates = (region: 'nyc' | 'longisland' | 'westchester' | 'u
     case 'westchester':
       baseLat = 41.1220; baseLng = -73.7949; break;
     case 'upstate':
-      baseLat = 42.3601; baseLng = -71.0589; break;
+      baseLat = 42.6526; baseLng = -73.7562; break; // Albany area
     case 'central':
-      baseLat = 43.0481; baseLng = -76.1474; break;
+      baseLat = 43.0481; baseLng = -76.1474; break; // Syracuse area
     case 'western':
-      baseLat = 42.8864; baseLng = -78.8784; break;
+      baseLat = 42.8864; baseLng = -78.8784; break; // Buffalo area
   }
   
   const latOffset = (Math.random() - 0.5) * 0.3;
@@ -297,12 +297,12 @@ export const comprehensiveNYCourses: Course[] = [
   {
     name: "James Baird State Park Golf Course",
     location: "Pleasant Valley, NY",
-    holes: generateHoles(18, 71, 'westchester')
+    holes: generateHoles(18, 71, 'upstate')
   },
   {
     name: "Rockland Lake State Park Golf Course",
     location: "Congers, NY",
-    holes: generateHoles(36, 144, 'westchester')
+    holes: generateHoles(36, 144, 'nyc')
   },
 
   // Upstate New York
