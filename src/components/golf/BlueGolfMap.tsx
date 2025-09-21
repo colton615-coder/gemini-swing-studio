@@ -259,23 +259,36 @@ export function BlueGolfMap({
 
       const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
       const shotNumber = currentHoleShots.length + 1;
-      const distanceToGreen = calculateDistance(
-        { lat: e.latlng.lat, lng: e.latlng.lng },
-        currentHole.greenCoords
-      );
+      
+      // Calculate distance from previous shot or tee
+      let distance;
+      if (currentHoleShots.length === 0) {
+        // First shot - distance from tee
+        distance = calculateDistance(
+          { lat: e.latlng.lat, lng: e.latlng.lng },
+          currentHole.teeCoords
+        );
+      } else {
+        // Subsequent shots - distance from previous shot
+        const previousShot = currentHoleShots[currentHoleShots.length - 1];
+        distance = calculateDistance(
+          { lat: e.latlng.lat, lng: e.latlng.lng },
+          previousShot.coordinates
+        );
+      }
 
       onShotAdd({
         holeNumber: currentHole.holeNumber,
         shotNumber,
         coordinates: { lat: e.latlng.lat, lng: e.latlng.lng },
-        club: 'Driver', // Default club
-        distance: distanceToGreen,
+        club: shotNumber === 1 ? 'Driver' : '7-Iron', // Default clubs
+        distance: Math.round(distance),
         lie: shotNumber === 1 ? 'tee' : 'fairway' // Default lie
       });
 
       toast({
-        title: "Shot Added",
-        description: `Shot ${shotNumber} placed - ${distanceToGreen} yards to green`
+        title: `Shot ${shotNumber} Placed`,
+        description: `${Math.round(distance)} yards`
       });
     });
 
@@ -375,50 +388,48 @@ export function BlueGolfMap({
       <Card className="overflow-hidden bg-black">
         <div ref={mapContainer} className="h-[500px] w-full" />
         
-        {/* Map Controls */}
-        <div className="p-4 bg-background border-t">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full border border-white"></div>
+      {/* Map Controls */}
+        <div className="p-3 bg-background border-t">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full border border-white"></div>
                 <span>Tee</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full border border-white"></div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-red-500 rounded-full border border-white"></div>
                 <span>Green</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full border border-white"></div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-blue-500 rounded-full border border-white"></div>
                 <span>Shots</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-0.5 bg-yellow-400"></div>
-                <span>Trajectory</span>
+              <div className="flex items-center gap-1">
+                <div className="w-6 h-0.5 bg-yellow-400"></div>
+                <span>Path</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
-              {selectedShotData && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditShot(selectedShotData)}
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => handleDeleteShot(selectedShot!)}
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" />
-                    Delete
-                  </Button>
-                </>
-              )}
-            </div>
+            {selectedShotData && (
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleEditShot(selectedShotData)}
+                >
+                  <Edit2 className="w-3 h-3 mr-1" />
+                  Edit
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => handleDeleteShot(selectedShot!)}
+                >
+                  <Trash2 className="w-3 h-3 mr-1" />
+                  Delete
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </Card>
