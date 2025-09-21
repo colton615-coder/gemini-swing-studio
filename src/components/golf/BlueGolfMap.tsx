@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MapPin, Target, Minus, Edit2, Trash2 } from "lucide-react";
 import { Hole } from "@/types/golf";
 import { Shot } from "@/types/shot";
-import { calculateDistance } from "@/utils/gps";
+import { calculateDistance, getCurrentPosition } from "@/utils/gps";
 import { useToast } from "@/hooks/use-toast";
 
 // Fix default marker icons
@@ -27,6 +27,7 @@ interface BlueGolfMapProps {
   onShotUpdate: (shotId: string, coordinates: { lat: number; lng: number }) => void;
   onShotDelete: (shotId: string) => void;
   onShotEdit?: (shotId: string, updates: Partial<Shot>) => void;
+  courseId?: string;
 }
 
 export function BlueGolfMap({ 
@@ -35,19 +36,49 @@ export function BlueGolfMap({
   onShotAdd, 
   onShotUpdate, 
   onShotDelete,
-  onShotEdit 
+  onShotEdit,
+  courseId 
 }: BlueGolfMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const markersLayer = useRef<L.LayerGroup | null>(null);
   const trajectoryLayer = useRef<L.LayerGroup | null>(null);
+  const userLocationMarker = useRef<L.Marker | null>(null);
   const [selectedShot, setSelectedShot] = useState<string | null>(null);
   const [editingShot, setEditingShot] = useState<Shot | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [customTeeLocation, setCustomTeeLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { toast } = useToast();
 
   const clubs = ['Driver', '3-Wood', '5-Wood', '3-Iron', '4-Iron', '5-Iron', '6-Iron', '7-Iron', '8-Iron', '9-Iron', 'PW', 'SW', 'Putter'];
   const lies = ['tee', 'fairway', 'rough', 'sand', 'green'] as const;
+
+  // Load custom tee location and track user location
+  useEffect(() => {
+    if (courseId && currentHole) {
+      const saved = localStorage.getItem(`customTee_${courseId}_${currentHole.holeNumber}`);
+      if (saved) {
+        setCustomTeeLocation(JSON.parse(saved));
+      } else {
+        setCustomTeeLocation(null);
+      }
+    }
+
+    // Update user location every 30 seconds
+    const updateUserLocation = async () => {
+      try {
+        const position = await getCurrentPosition({ maximumAge: 30000 });
+        setUserLocation(position);
+      } catch (error) {
+        console.log('Could not get user location for map');
+      }
+    };
+
+    updateUserLocation();
+    const interval = setInterval(updateUserLocation, 30000);
+    return () => clearInterval(interval);
+  }, [courseId, currentHole]);
 
   const createTeeIcon = () => {
     return L.divIcon({
@@ -264,11 +295,13 @@ export function BlueGolfMap({
       
       // Calculate distance from previous shot or tee
       let distance;
-      if (currentHoleShots.length === 0) {
+      const teeCoords = customTeeLocation || currentHole.teeCoords;
+      
+      if (currentHoleShots.length === 0 && teeCoords) {
         // First shot - distance from tee
         distance = calculateDistance(
           { lat: e.latlng.lat, lng: e.latlng.lng },
-          currentHole.teeCoords
+          teeCoords
         );
       } else {
         // Subsequent shots - distance from previous shot
@@ -329,7 +362,7 @@ export function BlueGolfMap({
 
   useEffect(() => {
     updateMarkers();
-  }, [shots, selectedShot]);
+  }, [shots, selectedShot, userLocation, customTeeLocation]);
 
   const currentHoleShots = shots.filter(s => currentHole && s.holeNumber === currentHole.holeNumber);
   const selectedShotData = selectedShot ? currentHoleShots.find(s => s.id === selectedShot) : null;

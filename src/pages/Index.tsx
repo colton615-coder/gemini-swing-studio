@@ -806,7 +806,7 @@ const Index = () => {
 
           <TabsContent value="gps">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <GPS currentHole={getCurrentHoleData()} />
+              <GPS currentHole={getCurrentHoleData()} courseId={selectedCourse.name} />
               <WeatherWidget 
                 courseLocation={selectedCourse ? {
                   lat: selectedCourse.holes[0]?.teeCoords?.lat || 0,
@@ -824,6 +824,7 @@ const Index = () => {
               onShotUpdate={updateShot}
               onShotDelete={deleteShot}
               onShotEdit={editShot}
+              courseId={selectedCourse.name}
             />
           </TabsContent>
 

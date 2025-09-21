@@ -2,18 +2,20 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Navigation, Target } from "lucide-react";
+import { MapPin, Navigation, Target, Crosshair } from "lucide-react";
 import { Coordinates, Hole } from "@/types/golf";
 import { calculateDistance, getCurrentPosition } from "@/utils/gps";
 import { useToast } from "@/hooks/use-toast";
 
 interface GPSProps {
   currentHole?: Hole;
+  courseId?: string;
 }
 
-export function GPS({ currentHole }: GPSProps) {
+export function GPS({ currentHole, courseId }: GPSProps) {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [customTeeLocation, setCustomTeeLocation] = useState<Coordinates | null>(null);
   const [distances, setDistances] = useState<{
     toTee: number | null;
     toGreen: number | null;
@@ -24,6 +26,18 @@ export function GPS({ currentHole }: GPSProps) {
   
   const { toast } = useToast();
 
+  // Load custom tee location for this course/hole
+  useEffect(() => {
+    if (courseId && currentHole) {
+      const saved = localStorage.getItem(`customTee_${courseId}_${currentHole.holeNumber}`);
+      if (saved) {
+        setCustomTeeLocation(JSON.parse(saved));
+      } else {
+        setCustomTeeLocation(null);
+      }
+    }
+  }, [courseId, currentHole]);
+
   const updateLocation = async () => {
     setIsLoading(true);
     try {
@@ -31,8 +45,9 @@ export function GPS({ currentHole }: GPSProps) {
       setUserLocation(position);
       
       if (currentHole) {
-        const toTee = currentHole.teeCoords ? 
-          calculateDistance(position, currentHole.teeCoords) : null;
+        const teeCoords = customTeeLocation || currentHole.teeCoords;
+        const toTee = teeCoords ? 
+          calculateDistance(position, teeCoords) : null;
         const toGreen = calculateDistance(position, currentHole.greenCoords);
         
         setDistances({
@@ -57,9 +72,49 @@ export function GPS({ currentHole }: GPSProps) {
     }
   };
 
+  const setTeeToMyLocation = async () => {
+    if (!courseId || !currentHole || !userLocation) return;
+    
+    const customTee = { ...userLocation };
+    setCustomTeeLocation(customTee);
+    
+    // Save to localStorage
+    localStorage.setItem(`customTee_${courseId}_${currentHole.holeNumber}`, JSON.stringify(customTee));
+    
+    // Recalculate distances
+    const toTee = calculateDistance(userLocation, customTee);
+    const toGreen = calculateDistance(userLocation, currentHole.greenCoords);
+    
+    setDistances({ toTee, toGreen });
+    
+    toast({
+      title: "Tee Position Set",
+      description: `Hole ${currentHole.holeNumber} tee set to your current location`
+    });
+  };
+
+  const resetTeeLocation = () => {
+    if (!courseId || !currentHole) return;
+    
+    localStorage.removeItem(`customTee_${courseId}_${currentHole.holeNumber}`);
+    setCustomTeeLocation(null);
+    
+    if (userLocation && currentHole.teeCoords) {
+      const toTee = calculateDistance(userLocation, currentHole.teeCoords);
+      const toGreen = calculateDistance(userLocation, currentHole.greenCoords);
+      setDistances({ toTee, toGreen });
+    }
+    
+    toast({
+      title: "Tee Position Reset",
+      description: "Using original course tee location"
+    });
+  };
+
   useEffect(() => {
     if (currentHole && userLocation) {
-      const toTee = calculateDistance(userLocation, currentHole.teeCoords);
+      const teeCoords = customTeeLocation || currentHole.teeCoords;
+      const toTee = teeCoords ? calculateDistance(userLocation, teeCoords) : null;
       const toGreen = calculateDistance(userLocation, currentHole.greenCoords);
       
       setDistances({
@@ -67,7 +122,7 @@ export function GPS({ currentHole }: GPSProps) {
         toGreen
       });
     }
-  }, [currentHole, userLocation]);
+  }, [currentHole, userLocation, customTeeLocation]);
 
   // Auto-update location when component mounts
   useEffect(() => {
@@ -105,7 +160,9 @@ export function GPS({ currentHole }: GPSProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
               <Target className="w-6 h-6 mx-auto mb-2 text-primary" />
-              <p className="text-sm text-muted-foreground">To Tee</p>
+              <p className="text-sm text-muted-foreground">
+                To Tee {customTeeLocation && <Badge variant="outline" className="ml-1 text-xs">Custom</Badge>}
+              </p>
               <p className="text-xl font-bold">
                 {distances.toTee ? `${distances.toTee} yds` : '--'}
               </p>
@@ -119,6 +176,32 @@ export function GPS({ currentHole }: GPSProps) {
               <p className="text-xl font-bold">
                 {distances.toGreen ? `${distances.toGreen} yds` : '--'}
               </p>
+            </div>
+          </div>
+
+          {/* Tee Position Controls */}
+          <div className="space-y-2 pt-2 border-t">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={setTeeToMyLocation}
+                disabled={!userLocation}
+                className="flex-1"
+              >
+                <Crosshair className="w-4 h-4 mr-2" />
+                Set Tee Here
+              </Button>
+              {customTeeLocation && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetTeeLocation}
+                  className="flex-1"
+                >
+                  Reset Tee
+                </Button>
+              )}
             </div>
           </div>
 
