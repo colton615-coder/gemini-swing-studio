@@ -378,7 +378,7 @@ const Index = () => {
                       <SelectTrigger className="w-48 bg-background border-2 hover:border-primary/50">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-background border-2 shadow-lg z-50">
+                      <SelectContent className="z-[110]">
                         <SelectItem value="all">All Regions</SelectItem>
                         <SelectItem value="nyc">NYC</SelectItem>
                         <SelectItem value="longisland">Long Island</SelectItem>
@@ -409,7 +409,7 @@ const Index = () => {
                     <SelectTrigger className="h-14 text-lg border-2 hover:border-primary/50 transition-colors bg-background">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="max-h-80 bg-background border-2 shadow-lg z-50">
+                    <SelectContent className="max-h-80 z-[110]">
                       {Object.entries(groupedCourses).map(([region, regionCourses]) => (
                         <div key={region}>
                           <div className="px-2 py-1 text-xs font-semibold text-muted-foreground bg-muted/50">
@@ -757,14 +757,26 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scorecard" className="space-y-4">
-          <div className="w-full overflow-x-auto">
-            <TabsList className="w-full min-w-fit flex bg-background/95 backdrop-blur-sm border-2 sticky top-4 z-40 shadow-lg gap-1">
-              <TabsTrigger value="scorecard" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Scorecard</TabsTrigger>
-              <TabsTrigger value="gps" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">GPS Shot</TabsTrigger>
-              <TabsTrigger value="shots" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Blue Maps</TabsTrigger>
-              <TabsTrigger value="google-maps" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Google</TabsTrigger>
-              <TabsTrigger value="extras" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Extras</TabsTrigger>
-              <TabsTrigger value="settings" className="flex-1 min-w-fit text-xs sm:text-sm font-semibold">Settings</TabsTrigger>
+          <div className="w-full overflow-x-auto pb-2">
+            <TabsList className="w-full h-14 flex justify-start bg-background/95 backdrop-blur-sm border-2 sticky top-4 z-40 shadow-lg rounded-xl p-2">
+              <TabsTrigger value="scorecard" className="flex-shrink-0 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg min-w-[80px]">
+                Scorecard
+              </TabsTrigger>
+              <TabsTrigger value="gps" className="flex-shrink-0 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg min-w-[80px]">
+                GPS Shot
+              </TabsTrigger>
+              <TabsTrigger value="shots" className="flex-shrink-0 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg min-w-[80px]">
+                Blue Maps
+              </TabsTrigger>
+              <TabsTrigger value="google-maps" className="flex-shrink-0 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg min-w-[80px]">
+                Google
+              </TabsTrigger>
+              <TabsTrigger value="extras" className="flex-shrink-0 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg min-w-[80px]">
+                Extras
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex-shrink-0 px-3 py-2 text-xs sm:text-sm font-semibold rounded-lg min-w-[80px]">
+                Settings
+              </TabsTrigger>
             </TabsList>
           </div>
 
