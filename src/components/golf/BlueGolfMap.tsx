@@ -400,12 +400,28 @@ export function BlueGolfMap({
         {/* Bottom Navigation */}
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/80 backdrop-blur-sm p-4">
           <div className="flex items-center justify-between">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-white hover:bg-white/20"
+              onClick={() => {
+                // Navigate to scorecard tab
+                const tabsTrigger = document.querySelector('[value="scorecard"]') as HTMLElement;
+                if (tabsTrigger) tabsTrigger.click();
+              }}
+            >
               <span className="text-xs">Scorecard</span>
             </Button>
             
             <div className="flex-1 mx-4">
-              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3">
+              <Button 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full py-3"
+                onClick={() => {
+                  // Navigate to scorecard and focus on current hole
+                  const tabsTrigger = document.querySelector('[value="scorecard"]') as HTMLElement;
+                  if (tabsTrigger) tabsTrigger.click();
+                }}
+              >
                 <span className="text-lg font-semibold">Hole {currentHole?.holeNumber}</span>
                 <span className="text-sm ml-2">Enter Score</span>
               </Button>
@@ -433,7 +449,16 @@ export function BlueGolfMap({
                   </Button>
                 </>
               )}
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/20">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-white hover:bg-white/20"
+                onClick={() => {
+                  // Navigate to extras tab which contains tools
+                  const tabsTrigger = document.querySelector('[value="extras"]') as HTMLElement;
+                  if (tabsTrigger) tabsTrigger.click();
+                }}
+              >
                 <span className="text-xs">Tools</span>
               </Button>
             </div>
@@ -442,7 +467,12 @@ export function BlueGolfMap({
 
         {/* Track Shot Button */}
         <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10">
-          <Button className="bg-black/70 hover:bg-black/80 text-white border border-white/30 rounded-full px-6 py-2 backdrop-blur-sm">
+          <Button 
+            className="bg-black/70 hover:bg-black/80 text-white border border-white/30 rounded-full px-6 py-2 backdrop-blur-sm"
+            onClick={() => {
+              alert('Tap anywhere on the map to add a shot at that location!');
+            }}
+          >
             <Target className="w-4 h-4 mr-2" />
             Track Shot
           </Button>
