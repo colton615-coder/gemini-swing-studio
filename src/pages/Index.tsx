@@ -14,6 +14,8 @@ import { CourseDownloader } from "@/components/golf/CourseDownloader";
 import { WeatherWidget } from "@/components/golf/WeatherWidget";
 import { PhotoAttachment } from "@/components/golf/PhotoAttachment";
 import { OfflineIndicator } from "@/components/golf/OfflineIndicator";
+import { GoogleMapsGolfView } from "@/components/golf/GoogleMapsGolfView";
+import { EnhancedGoogleMapsView } from "@/components/golf/EnhancedGoogleMapsView";
 import { comprehensiveNYCourses } from "@/data/comprehensive-ny-courses";
 import { Course, ScoreEntry, Round } from "@/types/golf";
 import { Shot, ShotTrackingRound } from "@/types/shot";
@@ -754,10 +756,11 @@ const Index = () => {
         </div>
 
         <Tabs defaultValue="scorecard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
             <TabsTrigger value="gps">GPS</TabsTrigger>
             <TabsTrigger value="shots">Shot Tracking</TabsTrigger>
+            <TabsTrigger value="google-maps">Google Maps</TabsTrigger>
             <TabsTrigger value="extras">Extras</TabsTrigger>
           </TabsList>
 
@@ -824,6 +827,17 @@ const Index = () => {
               onShotUpdate={updateShot}
               onShotDelete={deleteShot}
               onShotEdit={editShot}
+              courseId={selectedCourse.name}
+            />
+          </TabsContent>
+
+          <TabsContent value="google-maps">
+            <EnhancedGoogleMapsView
+              currentHole={getCurrentHoleData()}
+              shots={shotTrackingRound?.shots || []}
+              onShotAdd={addShot}
+              onShotUpdate={updateShot}
+              onShotDelete={deleteShot}
               courseId={selectedCourse.name}
             />
           </TabsContent>
