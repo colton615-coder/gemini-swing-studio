@@ -460,32 +460,11 @@ export function BlueGolfMap({
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              {selectedShotData && (
-                <>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-white hover:bg-white/20"
-                    onClick={() => handleEditShot(selectedShotData)}
-                  >
-                    <Edit2 className="w-4 h-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    className="text-red-400 hover:bg-red-400/20"
-                    onClick={() => handleDeleteShot(selectedShot!)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </>
-              )}
+            <div className="flex items-center gap-1">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 px-2"
                 onClick={() => {
                   // Navigate to extras tab which contains tools
                   const tabsTrigger = document.querySelector('[value="extras"]') as HTMLElement;
@@ -527,32 +506,69 @@ export function BlueGolfMap({
             </div>
           </div>
           
-          {/* Shot List */}
-          <div className="space-y-2">
-            <h5 className="text-sm font-medium text-muted-foreground">Shots:</h5>
-            {currentHoleShots.map((shot) => (
+      {/* Shot List */}
+      <div className="space-y-2">
+        <h5 className="text-sm font-medium text-muted-foreground">Shots:</h5>
+        {currentHoleShots.map((shot) => (
+          <div 
+            key={shot.id} 
+            className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+              selectedShot === shot.id ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
+            }`}
+          >
+            <div className="flex items-center gap-3 flex-1">
               <div 
-                key={shot.id} 
-                className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-colors ${
-                  selectedShot === shot.id ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
-                }`}
-                onClick={() => setSelectedShot(selectedShot === shot.id ? null : shot.id)}
+                className={`w-8 h-8 rounded-full ${selectedShot === shot.id ? 'bg-primary' : 'bg-blue-500'} text-white flex items-center justify-center text-sm font-bold cursor-pointer hover:scale-105 transition-transform`}
+                onClick={() => {
+                  setSelectedShot(selectedShot === shot.id ? null : shot.id);
+                  // Auto-trigger next shot tracking if this is Shot 1
+                  if (shot.shotNumber === 1 && currentHoleShots.length === 1) {
+                    toast({
+                      title: "Ready for Shot 2",
+                      description: "Click anywhere on the map to place your next shot"
+                    });
+                  }
+                }}
               >
-                <div className="flex items-center gap-2">
-                  <div className={`w-6 h-6 rounded-full ${selectedShot === shot.id ? 'bg-primary' : 'bg-blue-500'} text-white flex items-center justify-center text-xs font-bold`}>
-                    {shot.shotNumber}
-                  </div>
-                  <div className="text-sm">
-                    <span className="font-medium">{shot.club}</span>
-                    <span className="text-muted-foreground ml-2">({shot.lie})</span>
-                  </div>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {shot.distance}yd
-                </div>
+                {shot.shotNumber}
               </div>
-            ))}
+              <div className="text-sm flex-1">
+                <span className="font-medium">{shot.club}</span>
+                <span className="text-muted-foreground ml-2">({shot.lie})</span>
+              </div>
+              <div className="text-sm text-muted-foreground font-medium">
+                {shot.distance}yd
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1 ml-3">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditShot(shot);
+                }}
+              >
+                <Edit2 className="w-3 h-3" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteShot(shot.id);
+                }}
+              >
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
+        ))}
+      </div>
         </Card>
       )}
 
