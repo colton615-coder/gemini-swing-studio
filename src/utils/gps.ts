@@ -23,12 +23,20 @@ export function calculateDistance(coord1: Coordinates, coord2: Coordinates): num
 /**
  * Get current GPS position
  */
-export function getCurrentPosition(): Promise<Coordinates> {
+export function getCurrentPosition(options?: PositionOptions): Promise<Coordinates> {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation is not supported by this browser.'));
       return;
     }
+
+    const defaultOptions: PositionOptions = {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 0 // Force fresh location
+    };
+
+    const finalOptions = { ...defaultOptions, ...options };
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -38,13 +46,21 @@ export function getCurrentPosition(): Promise<Coordinates> {
         });
       },
       (error) => {
-        reject(error);
+        let errorMessage = 'Unable to get location';
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please enable location permissions.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information unavailable. Please try again.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+        }
+        reject(new Error(errorMessage));
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
+      finalOptions
     );
   });
 }

@@ -27,11 +27,12 @@ export function GPS({ currentHole }: GPSProps) {
   const updateLocation = async () => {
     setIsLoading(true);
     try {
-      const position = await getCurrentPosition();
+      const position = await getCurrentPosition({ maximumAge: 0 }); // Force fresh location
       setUserLocation(position);
       
       if (currentHole) {
-        const toTee = calculateDistance(position, currentHole.teeCoords);
+        const toTee = currentHole.teeCoords ? 
+          calculateDistance(position, currentHole.teeCoords) : null;
         const toGreen = calculateDistance(position, currentHole.greenCoords);
         
         setDistances({
@@ -42,12 +43,13 @@ export function GPS({ currentHole }: GPSProps) {
       
       toast({
         title: "Location Updated",
-        description: "GPS position refreshed successfully"
+        description: `GPS refreshed: ${position.lat.toFixed(6)}, ${position.lng.toFixed(6)}`
       });
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Unable to get your location. Please check GPS permissions.";
       toast({
         title: "GPS Error",
-        description: "Unable to get your location. Please check GPS permissions.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

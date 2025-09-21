@@ -30,6 +30,8 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const shotLayer = useRef<L.LayerGroup | null>(null);
+  const userLocationMarker = useRef<L.Marker | null>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [newShotClub, setNewShotClub] = useState<string>('Driver');
   const [newShotLie, setNewShotLie] = useState<'fairway' | 'rough' | 'sand' | 'green' | 'tee'>('tee');
   const { toast } = useToast();
@@ -331,11 +333,70 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
     }
   };
 
+  const updateUserLocation = async () => {
+    try {
+      const position = await getCurrentPosition({ maximumAge: 0 });
+      setUserLocation(position);
+      
+      if (!map.current) return;
+
+      // Remove existing user location marker
+      if (userLocationMarker.current) {
+        map.current.removeLayer(userLocationMarker.current);
+      }
+
+      // Create user location marker with "G" icon
+      const userIcon = L.divIcon({
+        className: 'user-location-marker',
+        html: `<div style="
+          width: 24px;
+          height: 24px;
+          background: #3b82f6;
+          border: 3px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-weight: bold;
+          font-size: 12px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        ">G</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      userLocationMarker.current = L.marker([position.lat, position.lng], { 
+        icon: userIcon,
+        zIndexOffset: 1000
+      })
+        .addTo(map.current)
+        .bindPopup(`
+          <div class="p-2">
+            <strong>Your Location</strong><br>
+            Lat: ${position.lat.toFixed(6)}<br>
+            Lng: ${position.lng.toFixed(6)}
+          </div>
+        `);
+
+      toast({
+        title: "Location Updated",
+        description: "Your GPS position has been refreshed"
+      });
+    } catch (error) {
+      toast({
+        title: "Location Error",
+        description: error instanceof Error ? error.message : "Could not get your current location",
+        variant: "destructive"
+      });
+    }
+  };
+
   const addCurrentLocationShot = async () => {
     if (!currentHole) return;
     
     try {
-      const position = await getCurrentPosition();
+      const position = await getCurrentPosition({ maximumAge: 0 });
       const currentHoleShots = shots.filter(s => s.holeNumber === currentHole.holeNumber);
       const shotNumber = currentHoleShots.length + 1;
       
@@ -349,7 +410,7 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
         const previousShot = currentHoleShots[currentHoleShots.length - 1];
         distance = calculateDistance(previousShot.coordinates, position);
       }
-      
+
       // Keep distances realistic for golf (max 400 yards)
       distance = Math.min(distance, 400);
 
@@ -369,7 +430,7 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
     } catch (error) {
       toast({
         title: "Location Error",
-        description: "Could not get your current location",
+        description: error instanceof Error ? error.message : "Could not get your current location",
         variant: "destructive"
       });
     }
@@ -460,6 +521,9 @@ export function ShotTrackingMap({ currentHole, shots, onShotAdd, onShotDelete }:
           </div>
 
           <div className="flex gap-2">
+            <Button onClick={updateUserLocation} variant="outline" className="flex-1">
+              📍 Update My Location
+            </Button>
             <Button onClick={addCurrentLocationShot} className="flex-1">
               <Plus className="w-4 h-4 mr-2" />
               Add Shot Here
